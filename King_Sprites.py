@@ -9,14 +9,15 @@ import math
 import collections
 import os
 from spritesheet import SpriteSheet
+from pathlib import Path
 
 class King_Sprites():
 
 	def __init__(self):
 
-		self.filename = "images\\sheets\\base.png"
+		self.filename = str(Path("images/sheets/base.png"))
 
-		self.filename2 = "images\\sheets\\ending_animations.png"
+		self.filename2 = str(Path("images/sheets/ending_animations.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -136,10 +137,3 @@ if __name__ == "__main__":
 		screen.blit(sprites.king_images["right"]["King_Standing"], (0, 0))
 
 		pygame.display.flip()
-
-
-
-
-
-
-

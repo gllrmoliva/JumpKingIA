@@ -7,6 +7,7 @@
 import os
 import pickle
 import pygame
+from pathlib import Path
 
 class Environment:
 
@@ -40,7 +41,7 @@ class Environment:
 
 		if "settings.dat" in os.listdir("Saves"):
 
-			with open("Saves\\settings.dat", "rb") as file:
+			with open(str(Path("Saves/settings.dat")), "rb") as file:
 
 				state = pickle.load(file)
 
@@ -54,7 +55,7 @@ class Environment:
 
 		if "save.dat" in os.listdir("Saves"):
 
-			with open("Saves\\save.dat", "rb") as file:
+			with open(str(Path("Saves") / "save.dat"), "rb") as file:
 
 				state = pickle.load(file)
 
@@ -64,7 +65,7 @@ class Environment:
 
 		if "permanent.dat" in os.listdir("Saves"):
 
-			with open("Saves\\permanent.dat", "rb") as file:
+			with open(str(Path("Saves/permanent.dat")), "rb") as file:
 
 				state = pickle.load(file)
 
@@ -75,11 +76,11 @@ class Environment:
 
 		settings, permanent = self.game_state()
 
-		with open("Saves\\settings.dat", "wb") as file:
+		with open(str(Path("Saves") / "settings.dat"), "wb") as file:
 
 			pickle.dump(settings, file)
 
-		with open("Saves\\permanent.dat", "wb") as file:
+		with open(Path("Saves") / "permanent.dat", "wb") as file:
 
 			pickle.dump(permanent, file)
 

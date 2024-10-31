@@ -8,6 +8,7 @@ import pygame
 import os
 import sys
 import math
+from pathlib import Path
 
 class Ending_Animation:
 
@@ -23,9 +24,9 @@ class Ending_Animation:
 
 		self.channel = pygame.mixer.Channel(1)
 
-		self.ending_music = pygame.mixer.Sound("Audio\\Misc\\ending.wav")
+		self.ending_music = pygame.mixer.Sound(str(Path("Audio/Misc/ending.wav")))
 
-		self.end_image = pygame.image.load("images\\sheets\\imagecrown.png").convert()
+		self.end_image = pygame.image.load(str(Path("images/sheets/imagecrown.png"))).convert()
 
 	def update(self, level, king, babe):
 

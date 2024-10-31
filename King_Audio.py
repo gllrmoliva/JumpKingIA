@@ -8,12 +8,13 @@ import pygame
 import os
 import re
 import collections
+from pathlib import Path
 
 class King_Audio:
 
 	def __init__(self):
 
-		self.directory = "Audio\\King"
+		self.directory = str(Path("Audio/King"))
 
 		self.audio = collections.defaultdict()
 
@@ -27,9 +28,9 @@ class King_Audio:
 
 		audio_dict = collections.defaultdict()
 
-		for audio in os.listdir(f"{self.directory}\\{file}"):
+		for audio in os.listdir(str(Path(f"{self.directory}/{file}"))):
 
-			a = pygame.mixer.Sound(f"{self.directory}\\{file}\\{audio}")
+			a = pygame.mixer.Sound(str(Path(f"{self.directory}/{file}/{audio}")))
 
 			a.set_volume(1.0)
 

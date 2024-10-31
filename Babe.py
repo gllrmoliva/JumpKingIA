@@ -7,6 +7,7 @@
 import pygame
 import math
 import os
+from pathlib import Path
 from King import King
 from Timer import Timer
 from physics import Physics
@@ -61,9 +62,9 @@ class Babe(King):
 
 		# Particles
 
-		self.jump_particle = King_Particle("images\\particles\\jump_particle.png", 5, 1, 32)
+		self.jump_particle = King_Particle(str(Path("images/particles/jump_particle.png")), 5, 1, 32)
 
-		self.snow_jump_particle = King_Particle("images\\particles\\snow_jump_particle.png", 4, 3, 36)
+		self.snow_jump_particle = King_Particle(str(Path("images/particles/snow_jump_particle.png")), 4, 3, 36)
 
 		self.isJump = False
 

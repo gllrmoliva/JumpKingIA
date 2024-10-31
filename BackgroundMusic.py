@@ -8,12 +8,12 @@ import pygame
 import os
 import collections
 import re
-
+from pathlib import Path
 class BackgroundAudio:
 
 	def __init__(self):
 
-		self.directory = "Audio\\Background"
+		self.directory = str(Path("Audio/Background"))
 
 		self.audio = collections.defaultdict()
 
@@ -117,7 +117,7 @@ class BackgroundAudio:
 
 		for file in os.listdir(f"{self.directory}"):
 
-			audio = pygame.mixer.Sound(f"{self.directory}\\{file}")
+			audio = pygame.mixer.Sound(str(Path(self.directory) / file))
 
 			audio.set_volume(1.0)
 

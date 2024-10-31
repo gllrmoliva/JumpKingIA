@@ -16,6 +16,7 @@ from spritesheet import SpriteSheet
 from King_Sprites import King_Sprites
 from King_Particles import King_Particle
 from King_Audio import King_Audio
+from pathlib import Path
 
 # action list
 def get_action_dict(agentCommand):
@@ -178,9 +179,9 @@ class King():
 
 		# Particles
 
-		self.jump_particle = King_Particle("images\\particles\\jump_particle.png", 5, 1, 32)
+		self.jump_particle = King_Particle(str(Path("images/particles/jump_particle.png")), 5, 1, 32)
 
-		self.snow_jump_particle = King_Particle("images\\particles\\snow_jump_particle.png", 4, 3, 36)
+		self.snow_jump_particle = King_Particle(str(Path("images/particles/snow_jump_particle.png")), 4, 3, 36)
 
 		self.level_change = 0
 

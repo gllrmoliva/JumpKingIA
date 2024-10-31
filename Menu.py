@@ -10,6 +10,7 @@ import sys
 import re
 import pickle
 from spritesheet import SpriteSheet
+from pathlib import Path
 
 class Menus:
 
@@ -23,13 +24,13 @@ class Menus:
 
 		self.king = king
 
-		self.font = pygame.font.Font("Fonts\\ttf_pixolde_bold.ttf", 16)
+		self.font = pygame.font.Font(str(Path("Fonts/ttf_pixolde_bold.ttf")), 16)
 
 		self.current_menu = None
 
 		self.channels = [pygame.mixer.Channel(13), pygame.mixer.Channel(14)]
 
-		self.audio = self._load_audio("Audio\\gui_sfx")
+		self.audio = self._load_audio(str(Path("Audio/gui_sfx")))
 
 		self.images = self._load_images(self.directory)
 
@@ -193,7 +194,7 @@ class Menus:
 
 		for audio_name in os.listdir(file):
 
-			audios[re.match(r"[^.]+", audio_name).group()] = pygame.mixer.Sound(f"{file}\\{audio_name}")
+			audios[re.match(r"[^.]+", audio_name).group()] = pygame.mixer.Sound(str(Path(f"{file}/{audio_name}")))
 
 		return audios
 	
@@ -205,7 +206,7 @@ class Menus:
 
 			if image_name == "frame.png":
 
-				image = SpriteSheet(f"{file}\\{image_name}")
+				image = SpriteSheet(str(Path(f"{file}/{image_name}")))
 
 				image_names = ["topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"]
 
@@ -213,7 +214,7 @@ class Menus:
 
 			elif image_name == "slider.png":
 
-				image = SpriteSheet(f"{file}\\{image_name}")
+				image = SpriteSheet(str(Path(f"{file}/{image_name}")))
 
 				image_names = ["left", "line", "right", "slider"]
 
@@ -221,7 +222,7 @@ class Menus:
 
 			elif image_name == "checkbox.png":
 
-				image = SpriteSheet(f"{file}\\{image_name}")
+				image = SpriteSheet(str(Path(f"{file}/{image_name}")))
 
 				image_names = ["unchecked", "checked"]
 
@@ -229,7 +230,7 @@ class Menus:
 
 			elif image_name == "arrows.png":
 
-				image = SpriteSheet(f"{file}\\{image_name}")
+				image = SpriteSheet(str(Path(f"{file}/{image_name}")))
 
 				image_names = ["left", "right"]
 
@@ -237,7 +238,7 @@ class Menus:
 
 			else:
 
-				images[re.match(r"[^.]+", image_name).group()] = pygame.image.load(f"{file}\\{image_name}").convert_alpha()
+				images[re.match(r"[^.]+", image_name).group()] = pygame.image.load(str(Path(f"{file}/{image_name}"))).convert_alpha()
 
 		return images
 
@@ -396,7 +397,7 @@ class Menus:
 
 	def save(self):
 
-		with open("Saves\\save.dat", "wb") as file:
+		with open(str(Path("Saves/save.dat")), "wb") as file:
 
 			pickle.dump(self.game_state(), file)
 
@@ -404,7 +405,7 @@ class Menus:
 
 		self.channels[0].play(self.audio["selectA"])
 
-		with open("Saves\\save.dat", "wb") as file:
+		with open(str(Path("Saves/save.dat")), "wb") as file:
 
 			pickle.dump(self.game_state(), file)
 
@@ -436,7 +437,7 @@ class Menus:
 
 		self.levels.reset()
 
-		with open("Saves\\save.dat", "wb") as file:
+		with open(str(Path("Saves/save.dat")), "wb") as file:
 
 			pickle.dump(self.game_state(), file)
 
@@ -472,7 +473,7 @@ class Menus:
 
 		self.channels[1].play(self.audio["opening_theme"])
 
-		with open("Saves\\save.dat", "rb") as file:
+		with open(str(Path("Saves/save.dat")), "rb") as file:
 
 			state = pickle.load(file)
 
@@ -1024,13 +1025,3 @@ class Number_Slider:
 	def activate(self, direction):
 
 		self.function(direction)
-	
-	
-
-
-
-
-
-
-
-

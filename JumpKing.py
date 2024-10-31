@@ -25,6 +25,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 import time
+from pathlib import Path
 
 
 class NETWORK(torch.nn.Module):
@@ -168,7 +169,7 @@ class JKGame:
 
 		self.game_screen_x = 0
 
-		pygame.display.set_icon(pygame.image.load("images\\sheets\\JumpKingIcon.ico"))
+		pygame.display.set_icon(pygame.image.load(str(Path("images/sheets/JumpKingIcon.ico"))))
 
 		self.levels = Levels(self.game_screen)
 
@@ -439,6 +440,6 @@ def train():
 
 			
 if __name__ == "__main__":
-	#Game = JKGame()
-	#Game.running()
-	train()
+	Game = JKGame()
+	Game.running()
+	#train()

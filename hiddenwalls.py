@@ -9,6 +9,7 @@ import collections
 import os
 import re
 import sys
+from pathlib import Path
 
 class HiddenWalls:
 
@@ -44,7 +45,7 @@ class HiddenWall:
 
 	def __init__(self, x, y, directory, file):
 
-		self.image = pygame.image.load(f"{directory}\\{file}")
+		self.image = pygame.image.load(str(Path(f"{directory}/{file}")))
 
 		self.fake = pygame.Surface((self.image.get_width(), self.image.get_height())).convert()
 
@@ -54,7 +55,7 @@ class HiddenWall:
 
 		self.found_channel = pygame.mixer.Channel(6)
 
-		self.found_audio = pygame.mixer.Sound("Audio\\Misc\\new_location.wav")
+		self.found_audio = pygame.mixer.Sound(str(Path("Audio/Misc/new_location.wav")))
 
 		self.found_audio.set_volume(1.0)
 
