@@ -130,6 +130,7 @@ class Levels:
 		self.END = False
 
 	def blit1(self):
+		'''Metodo que blitea (?) los objetos del nivel 1'''
 
 		try:
 
@@ -163,6 +164,7 @@ class Levels:
 			print("BLIT1 ERROR: ", e)
 
 	def blit2(self):
+		'''Metodo que blitea (?) los objetos del nivel 2'''
 
 		try:
 
@@ -203,6 +205,7 @@ class Levels:
 			print("BLIT2 ERROR: ", e)
 
 	def update_levels(self, king, babe, agentCommand=None):
+		'''Metodo que actualiza los objetos del nivel'''
 
 		self.update_wind(king)
 
@@ -229,6 +232,7 @@ class Levels:
 			babe.update(king)
 
 	def update_flyers(self, king):
+		'''Metodo que actualiza los flyers del nivel'''
 
 		try:
 
@@ -243,6 +247,7 @@ class Levels:
 			print("UPDATEFLYERS ERROR: ", e)
 
 	def update_audio(self):
+		'''Metodo que actualiza el audio del nivel'''
 
 		try:
 
@@ -275,6 +280,7 @@ class Levels:
 			print("UPDATEAUDIO ERROR: ", e)
 
 	def update_discovery(self, king):
+		'''Metodo que actualiza el descubrimiento del nivel (Muestra el nombre en pantalla)'''
 
 		try:
 
@@ -301,6 +307,7 @@ class Levels:
 			print("UPDATEDISCOVERY ERROR: ", e)
 
 	def update_readables(self, king):
+		'''Metodo que actualiza los objetos legibles del nivel'''
 
 		try:
 
@@ -313,6 +320,7 @@ class Levels:
 			print("UPDATEREADABLES ERROR:", e)
 
 	def update_npcs(self, king):
+		'''Metodo que actualiza los NPCs del nivel'''
 
 		try:
 
@@ -325,6 +333,7 @@ class Levels:
 			print("UPDATENPCS ERROR:", e)
 
 	def update_hiddenwalls(self, king):
+		'''Metodo que actualiza las paredes ocultas del nivel'''
 
 		try:
 
@@ -339,6 +348,7 @@ class Levels:
 			print("UPDATEHIDDENWALLS ERROR: ", e)
 
 	def update_wind(self, king):
+		'''Metodo que actualiza el viento del nivel'''
 
 		try:
 
@@ -362,6 +372,7 @@ class Levels:
 
 
 	def _load_levels(self):
+		'''Metodo que carga los niveles'''
 
 		try:
 
@@ -445,6 +456,7 @@ class Levels:
 			print("LOAD LEVELS ERROR: ", e)
 
 	def reset(self):
+		'''Metodo que resetea los niveles'''
 
 		self.current_level = 0
 
