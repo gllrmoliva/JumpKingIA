@@ -19,6 +19,7 @@ from King_Audio import King_Audio
 
 # action list
 def get_action_dict(agentCommand):
+	'''Metodo que retorna un diccionario con las teclas que se deben presionar'''
 	keys = {}
 	if agentCommand == 0:
 		keys[pygame.K_SPACE] = 0
@@ -241,6 +242,7 @@ class King():
 
 
 	def update(self, command=None, agentCommand=None):
+		'''Metodo que actualiza al rey dependiendo del modo en el que esta (normal o creativo)'''
 
 		if os.environ.get("mode") == "normal":
 

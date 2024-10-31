@@ -188,6 +188,8 @@ class JKGame:
 		pygame.display.set_caption('Jump King At Home XD')
 
 	def reset(self):
+		'''Método para reiniciar el juego'''
+
 		self.king.reset()
 		self.levels.reset()
 		os.environ["start"] = "1"
@@ -207,12 +209,14 @@ class JKGame:
 		return done, state
 
 	def move_available(self):
+		'''Metodo para conseguir movimientos disponibles'''
 		available = not self.king.isFalling \
 					and not self.king.levels.ending \
 					and (not self.king.isSplat or self.king.splatCount > self.king.splatDuration)
 		return available
 
 	def step(self, action):
+		'''Metodo para realizar un paso en el juego'''
 		old_level = self.king.levels.current_level
 		old_y = self.king.y
 		#old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
@@ -269,6 +273,7 @@ class JKGame:
 			pygame.display.update()
 
 	def _check_events(self):
+		'''Metodo para verificar eventos'''
 
 		for event in pygame.event.get():
 
@@ -299,10 +304,12 @@ class JKGame:
 				self._resize_screen(event.w, event.h)
 
 	def _update_gamestuff(self, action=None):
+		'''Metodo para actualizar el juego'''
 
 		self.levels.update_levels(self.king, self.babe, agentCommand=action)
 
 	def _update_guistuff(self):
+		'''Metodo para actualizar la interfaz de usuario'''
 
 		if self.menus.current_menu:
 
@@ -313,6 +320,7 @@ class JKGame:
 			self.start.update()
 
 	def _update_gamescreen(self):
+		'''Metodo para actualizar la pantalla del juego'''
 
 		pygame.display.set_caption(f"Jump King At Home XD - {self.clock.get_fps():.2f} FPS")
 
@@ -347,10 +355,12 @@ class JKGame:
 		self.screen.blit(pygame.transform.scale(self.game_screen, self.screen.get_size()), (self.game_screen_x, 0))
 
 	def _resize_screen(self, w, h):
+		'''Metodo para redimensionar la pantalla'''
 
 		self.screen = pygame.display.set_mode((w, h), pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.SRCALPHA)
 
 	def _shake_screen(self):
+		'''Metodo para agitar la pantalla'''
 
 		try:
 
@@ -379,6 +389,7 @@ class JKGame:
 			print("SHAKE ERROR: ", e)
 
 	def _update_audio(self):
+		'''Metodo para actualizar el audio'''
 
 		for channel in range(pygame.mixer.get_num_channels()):
 
@@ -410,6 +421,7 @@ class JKGame:
 
 
 def train():
+	'''Funcion para entrenar la IA'''
 	action_dict = {
 		0: 'right',
 		1: 'left',
@@ -439,6 +451,7 @@ def train():
 
 			
 if __name__ == "__main__":
+	# Cambiar para poder jugar o dejar a la IA entrenar
 	#Game = JKGame()
 	#Game.running()
 	train()
