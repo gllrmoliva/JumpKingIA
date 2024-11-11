@@ -178,7 +178,7 @@ class Gargoyle(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/gargoyle.png"))
+		self.filename = str(Path("Assets/props/gargoyle.png"))
 
 		self.start_rect = (0, 0, 41, 39)
 
@@ -200,7 +200,7 @@ class Merchant(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/merchant.png"))
+		self.filename = str(Path("Assets/props/merchant.png"))
 
 		self.start_rect = (0, 0, 32, 32)
 
@@ -218,7 +218,7 @@ class Bonfire(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/Bonfire.png"))
+		self.filename = str(Path("Assets/props/Bonfire.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -245,7 +245,7 @@ class FlowingWater(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/1_water.png"))
+		self.filename = str(Path("Assets/props/1_water.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -263,7 +263,7 @@ class SewerDrop(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/SewerDrop.png"))
+		self.filename = str(Path("Assets/props/SewerDrop.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -281,7 +281,7 @@ class OvenFire(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/ovenfire.png"))
+		self.filename = str(Path("Assets/props/ovenfire.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -299,7 +299,7 @@ class Kettle(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/kettle.png"))
+		self.filename = str(Path("Assets/props/kettle.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -317,7 +317,7 @@ class Grammofon(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/grammofon.png"))
+		self.filename = str(Path("Assets/props/grammofon.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -335,7 +335,7 @@ class Candle(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/Candle.png"))
+		self.filename = str(Path("Assets/props/Candle.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -363,7 +363,7 @@ class DungeonTorch(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/DungeonTorch.png"))
+		self.filename = str(Path("Assets/props/DungeonTorch.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -391,7 +391,7 @@ class Flag(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/Flag.png"))
+		self.filename = str(Path("Assets/props/Flag.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -413,7 +413,7 @@ class Dust1(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/dust1.png"))
+		self.filename = str(Path("Assets/props/dust1.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -445,7 +445,7 @@ class Dust2(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/dust2.png"))
+		self.filename = str(Path("Assets/props/dust2.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 
@@ -477,7 +477,7 @@ class Dust3(Prop):
 
 		super().__init__()
 
-		self.filename = str(Path("props/dust3.png"))
+		self.filename = str(Path("Assets/props/dust3.png"))
 
 		self.spritesheet = SpriteSheet(self.filename)
 

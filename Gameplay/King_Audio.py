@@ -14,7 +14,7 @@ class King_Audio:
 
 	def __init__(self):
 
-		self.directory = str(Path("Audio/King"))
+		self.directory = str(Path("Assets/Audio/King"))
 
 		self.audio = collections.defaultdict()
 

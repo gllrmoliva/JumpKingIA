@@ -15,7 +15,7 @@ class HiddenWalls:
 
 	def __init__(self):
 
-		self.directory = "hiddenwalls"
+		self.directory = str(Path("Assets/hiddenwalls"))
 
 		self.names = {"6_hidden_wall1.png" : (303, 223),
 					"6_hidden_wall2_1.png" : (382, 47),
@@ -55,7 +55,7 @@ class HiddenWall:
 
 		self.found_channel = pygame.mixer.Channel(6)
 
-		self.found_audio = pygame.mixer.Sound(str(Path("Audio/Misc/new_location.wav")))
+		self.found_audio = pygame.mixer.Sound(str(Path("Assets/Audio/Misc/new_location.wav")))
 
 		self.found_audio.set_volume(1.0)
 

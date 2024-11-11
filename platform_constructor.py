@@ -23,11 +23,11 @@ class Constructor():
 
 		self.fps = 30
 
-		self.map = pygame.image.load(str(Path("./MG/27.png")))
+		self.map = pygame.image.load(str(Path("./Assets/MG/27.png")))
 
 		self.map = pygame.transform.scale(self.map, (self.map.get_width() * 2, self.map.get_height() * 2))
 
-		self.candle = pygame.image.load(str(Path("props/Candle.png")))
+		self.candle = pygame.image.load(str(Path("Assets/props/Candle.png")))
 
 		self.wack = pygame.Surface((16, 16), pygame.SRCALPHA)
 

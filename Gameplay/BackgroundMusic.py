@@ -13,7 +13,7 @@ class BackgroundAudio:
 
 	def __init__(self):
 
-		self.directory = str(Path("Audio/Background"))
+		self.directory = str(Path("Assets/Audio/Background"))
 
 		self.audio = collections.defaultdict()
 

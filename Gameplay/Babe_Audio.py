@@ -14,7 +14,7 @@ class Babe_Audio:
 
 	def __init__(self):
 
-		self.directory = Path("Audio")
+		self.directory = Path("Assets/Audio")
 
 		self.audio = collections.defaultdict()
 

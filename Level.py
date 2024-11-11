@@ -22,6 +22,7 @@ from Gameplay.Readable import Readables
 from Gameplay.Flyers import Flyers
 from Gameplay.Ending_Animation import Ending_Animation
 from Gameplay.Wind import Wind
+from pathlib import Path
 
 class Level:
 
@@ -77,11 +78,11 @@ class Levels:
 
 		self.platforms = Platforms()
 
-		self.background = Backgrounds("BG").backgrounds
+		self.background = Backgrounds(str(Path("Assets/BG"))).backgrounds
 
-		self.midground = Backgrounds("MG").backgrounds
+		self.midground = Backgrounds(str(Path("Assets/MG"))).backgrounds
 
-		self.foreground = Backgrounds("FG").backgrounds
+		self.foreground = Backgrounds(str(Path("Assets/FG"))).backgrounds
 
 		self.props = Props().props
 

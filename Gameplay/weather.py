@@ -19,7 +19,7 @@ class Weathers:
 
 		self.wind_levels = [25, 26, 27, 28, 29, 30, 31]
 
-		self.directory = "weather"
+		self.directory = str(Path("Assets/weather"))
 
 		self.rain_color = (101, 157, 191)
 
@@ -164,7 +164,7 @@ if __name__ == "__main__":
 	screen = pygame.Surface((480, 360), pygame.SRCALPHA).convert()
 	screen.set_colorkey((0, 255, 0), pygame.RLEACCEL)
 
-	mask = pygame.mask.from_surface(pygame.image.load(str(Path("weather/rainmask13.png"))))
+	mask = pygame.mask.from_surface(pygame.image.load(str(Path("Assets/weather/rainmask13.png"))))
 
 	beta_screen = pygame.Surface((480, 360), pygame.SRCALPHA).convert()
 	beta_screen.set_colorkey((255, 0, 0), pygame.RLEACCEL)
@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
 		wack = pygame.Surface((480, 360), pygame.SRCALPHA).convert()
 
-		rain = pygame.image.load(str(Path(f"weather/light_rain{a}.png"))).convert_alpha()
+		rain = pygame.image.load(str(Path(f"Assets/weather/light_rain{a}.png"))).convert_alpha()
 
 		for event in pygame.event.get():
 

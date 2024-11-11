@@ -40,9 +40,9 @@ class NPC:
 
 	def __init__(self):
 
-		self.font = pygame.font.Font(str(Path("Fonts/ttf_pixolde.ttf")), 14)
+		self.font = pygame.font.Font(str(Path("Assets/Fonts/ttf_pixolde.ttf")), 14)
 
-		self.audio = pygame.mixer.Sound(str(Path("Audio/Misc/talking.wav")))
+		self.audio = pygame.mixer.Sound(str(Path("Assets/Audio/Misc/talking.wav")))
 
 		self.channel = pygame.mixer.Channel(9)
 
@@ -99,7 +99,7 @@ class OldMan(NPC):
 
 		super().__init__()
 
-		self.directory = str(Path("props/old_man.png"))
+		self.directory = str(Path("Assets/props/old_man.png"))
 
 		self.start_rect = (0, 0, 32, 24)
 
@@ -476,7 +476,7 @@ class Hermit(NPC):
 
 		super().__init__()
 
-		self.directory = str(Path("props/hermit.png"))
+		self.directory = str(Path("Assets/props/hermit.png"))
 
 		self.start_rect = (0, 0, 32, 32)
 
@@ -669,7 +669,7 @@ class Skeleton(NPC):
 
 		super().__init__()
 
-		self.directory = str(Path("props/skeleton.png"))
+		self.directory = str(Path("Assets/props/skeleton.png"))
 
 		self.start_rect = (0, 0, 24, 24)
 

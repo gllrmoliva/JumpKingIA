@@ -18,19 +18,19 @@ class Menus:
 
 		self.screen = screen
 
-		self.directory = "gui"
+		self.directory = str(Path("Assets/gui"))
 
 		self.levels = levels
 
 		self.king = king
 
-		self.font = pygame.font.Font(str(Path("Fonts/ttf_pixolde_bold.ttf")), 16)
+		self.font = pygame.font.Font(str(Path("Assets/Fonts/ttf_pixolde_bold.ttf")), 16)
 
 		self.current_menu = None
 
 		self.channels = [pygame.mixer.Channel(13), pygame.mixer.Channel(14)]
 
-		self.audio = self._load_audio(str(Path("Audio/gui_sfx")))
+		self.audio = self._load_audio(str(Path("Assets/Audio/gui_sfx")))
 
 		self.images = self._load_images(self.directory)
 

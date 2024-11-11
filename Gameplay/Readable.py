@@ -15,7 +15,7 @@ class Readables:
 
 	def __init__(self):
 
-		self.font = pygame.font.Font(str(Path("Fonts/ttf_pixolde.ttf")), 14)
+		self.font = pygame.font.Font(str(Path("Assets/Fonts/ttf_pixolde.ttf")), 14)
 
 		self.readable_6 = ((304, 278, 29, 27), """I have had enough. My feet hurt from all the jumping, I have fallen too many times to count... How long has it been by now?
 
@@ -105,7 +105,7 @@ class Readable:
 
 		self.channel_counter = 1
 
-		self.audio = pygame.mixer.Sound(str(Path("Audio/Misc/talking.wav")))
+		self.audio = pygame.mixer.Sound(str(Path("Assets/Audio/Misc/talking.wav")))
 
 	def update(self, king):
 

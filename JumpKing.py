@@ -50,7 +50,7 @@ class JKGame:
 
 		self.game_screen_x = 0
 
-		pygame.display.set_icon(pygame.image.load(str(Path("images/sheets/JumpKingIcon.ico"))))
+		pygame.display.set_icon(pygame.image.load(str(Path("Assets/images/sheets/JumpKingIcon.ico"))))
 
 		self.levels = Levels(self.game_screen)
 

@@ -14,7 +14,7 @@ class Scrollers:
 
 	def __init__(self):
 
-		self.directory = "Scrolling"
+		self.directory = str(Path("Assets/Scrolling"))
 
 		self.images = collections.defaultdict()
 
