@@ -9,7 +9,7 @@ import os
 import sys
 import re
 import pickle
-from spritesheet import SpriteSheet
+from Gameplay.spritesheet import SpriteSheet
 from pathlib import Path
 
 class Menus:

@@ -9,11 +9,11 @@ import os
 import inspect
 import pickle
 import numpy as np
-from environment import Environment
-from spritesheet import SpriteSheet
-from Background import Backgrounds
+from Gameplay.environment import Environment
+from Gameplay.spritesheet import SpriteSheet
+from Gameplay.Background import Backgrounds
 from King import King
-from Babe import Babe
+from Gameplay.Babe import Babe
 from Level import Levels
 from Menu import Menus
 
@@ -334,6 +334,6 @@ def train():
 
 			
 if __name__ == "__main__":
-	#Game = JKGame()
-	#Game.running()
-	train()
+	Game = JKGame()
+	Game.running()
+	#train()

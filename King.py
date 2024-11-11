@@ -10,12 +10,12 @@ import collections
 import os
 import numpy
 import random
-from Timer import Timer
-from physics import Physics
-from spritesheet import SpriteSheet
-from King_Sprites import King_Sprites
-from King_Particles import King_Particle
-from King_Audio import King_Audio
+from Gameplay.Timer import Timer
+from Gameplay.physics import Physics
+from Gameplay.spritesheet import SpriteSheet
+from Gameplay.King_Sprites import King_Sprites
+from Gameplay.King_Particles import King_Particle
+from Gameplay.King_Audio import King_Audio
 from pathlib import Path
 
 # action list
