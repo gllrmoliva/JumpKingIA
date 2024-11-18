@@ -13,9 +13,14 @@ from DumbAgent import DumbAgent
 from RandomAgent import RandomAgent
 from JumpKing import JKGame
 
-#TODO: Esta función la podriamos generalizar para todos los agentes 
+'''
+¡Obsoleto!
+Esta función corresponde el entrenamiento del repositorio original.
+Ya no esta siendo utilizada. Aun así creo que es bueno dejarla por ahora.
+En cambio en Train.py hay una clase Train que pretende generalizar a un Agente con un método cualquiera y añadir funcionalidades.
+'''
 def train():
-	'''Funcion para entrenar la IA'''
+	# Funcion para entrenar la IA
 	action_dict = {
 		0: 'right',
 		1: 'left',
@@ -43,7 +48,6 @@ def train():
 			state = next_state
 		print (f'episode: {i}, reward: {running_reward}')
 
-			
 if __name__ == "__main__":
 	#Game = JKGame()
 	#Game.running()
