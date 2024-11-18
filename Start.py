@@ -4,11 +4,15 @@
 #
 #
 
+# Corresponde al inicio de la aplicación, incluye la inicialización de componentes (audio, imagen), presentación del desarrollador y el titulo del juego
+# No encontré nada que nos interese, pero por si acaso revisar mejor.
+
 import pygame
 import math
 import os
 import re
 from pathlib import Path
+
 
 class Start:
 

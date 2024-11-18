@@ -132,6 +132,7 @@ class Levels:
 
 	def blit1(self):
 		'''Metodo que blitea (?) los objetos del nivel 1'''
+		# Método que muestra en pantalla los objetos "del fondo" (Están visualmente atrás del resto)
 
 		try:
 
@@ -166,6 +167,7 @@ class Levels:
 
 	def blit2(self):
 		'''Metodo que blitea (?) los objetos del nivel 2'''
+		# Método que muestra en pantalla los objetos "en primer plano" (Están visualmente por encima del resto)
 
 		try:
 

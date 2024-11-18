@@ -4,6 +4,10 @@
 #
 #
 
+'''
+A partir de la codificación de una hitbox, la crea
+'''
+
 import pygame
 
 import sys

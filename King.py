@@ -4,6 +4,10 @@
 #
 #
 
+'''
+Clase que modela el rey y sus controles
+'''
+
 import pygame
 import math
 import collections
@@ -22,35 +26,35 @@ from pathlib import Path
 def get_action_dict(agentCommand):
 	'''Metodo que retorna un diccionario con las teclas que se deben presionar'''
 	keys = {}
-	if agentCommand == 0:
+	if agentCommand == 0: # Moverse a la derecha
 		keys[pygame.K_SPACE] = 0
 		keys[pygame.K_RIGHT] = 1
 		keys[pygame.K_LEFT] = 0
 
-	elif agentCommand == 1:
+	elif agentCommand == 1: # a la izquierda
 		keys[pygame.K_SPACE] = 0
 		keys[pygame.K_RIGHT] = 0
 		keys[pygame.K_LEFT] = 1
 
-	elif agentCommand == 2:
+	elif agentCommand == 2: # iniciar la carga de un salto a la derecha
 		keys[pygame.K_SPACE] = 1
 		keys[pygame.K_RIGHT] = 1
 		keys[pygame.K_LEFT] = 0
 
-	elif agentCommand == 3:
+	elif agentCommand == 3: # salto a la izquierda
 		keys[pygame.K_SPACE] = 1
 		keys[pygame.K_RIGHT] = 0
 		keys[pygame.K_LEFT] = 1
+	
+	elif agentCommand == 4: # salto vertical. No tiene mucho sentido que un agente decida tomar esta acción
+		keys[pygame.K_SPACE] = 1
+		keys[pygame.K_RIGHT] = 0
+		keys[pygame.K_LEFT] = 0
 
-	# elif agentCommand == 4:
-	# 	keys[pygame.K_SPACE] = 0
-	# 	keys[pygame.K_RIGHT] = 0
-	# 	keys[pygame.K_LEFT] = 0
-	#
-	# elif agentCommand == 5:
-	# 	keys[pygame.K_SPACE] = 1
-	# 	keys[pygame.K_RIGHT] = 0
-	# 	keys[pygame.K_LEFT] = 0
+	elif agentCommand == 5: # quedarse quieto. Un agente no deberia (creo) nunca tomar esta acción
+		keys[pygame.K_SPACE] = 0
+		keys[pygame.K_RIGHT] = 0
+		keys[pygame.K_LEFT] = 0
 
 	else:
 		print(agentCommand)
