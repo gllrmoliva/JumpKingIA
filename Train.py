@@ -25,8 +25,8 @@ ACTION_SPACE : dict[int, str] = {
 1: 'left',
 2: 'right+space',
 3: 'left+space',
-# 4: 'space',   # No es util considerar esta acción, por ahora al menos.
-# 5: 'idle',    # No es util considerar esta acción
+4: 'space',   # No es util considerar esta acción, por ahora al menos.
+5: 'idle',    # No es util considerar esta acción
 }
 
 # Parametros de la matriz del nivel
@@ -212,8 +212,8 @@ class Agent():
 Es una clase que 'envuelve' a JKGame para que sus metodos devuelvan los estados como instancias de State()
 '''
 class Environment():
-    def __init__(self, steps_per_episode):
-        self.game = JKGame(max_step=steps_per_episode)
+    def __init__(self, steps_per_episode, FPS):
+        self.game = JKGame(max_step=steps_per_episode, FPS=FPS)
     
     def reset(self):
         done, state = self.game.reset()
@@ -227,15 +227,25 @@ class Environment():
 Para iniciar el juego con función de entrenar un agente
 '''
 class Train():
+    '''
+    Parametros:
+        agent: Qué agente (es decir, que método de aprendizaje) se va a usar. Recibe una instancia.
+        steps_per_episode: Cuantos 'pasos' realizar por episodio
+        numbers_of_episode: Cuantos episodios a realizar
+        FPS: Tasa de cuadros con las que se va a ejecutar el juego
+            -1: Desbloqueado
+            0: Utilizar el código del repositorio original (Se llama a una variable de entorno) [Valor por defecto]   
+    '''
     def __init__(self,
                  agent : Agent,
                  steps_per_episode=1000,
-                 numbers_of_episode=100000):
+                 numbers_of_episode=100000,
+                 FPS=0):
         
         self.agent = agent
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = numbers_of_episode
-        self.env = Environment(self.steps_per_episode)
+        self.env = Environment(self.steps_per_episode, FPS)
 
     def run(self):
 

@@ -9,8 +9,7 @@ from pathlib import Path
 from DDQN import DDQN
 
 import Train
-from DumbAgent import DumbAgent
-from RandomAgent import RandomAgent
+from ListAgent import ListAgent
 from JumpKing import JKGame
 
 '''
@@ -54,5 +53,5 @@ if __name__ == "__main__":
 
 	#train()
 
-	t = Train.Train(DumbAgent())
+	t = Train.Train(ListAgent(), FPS=-1)
 	t.run()

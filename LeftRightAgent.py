@@ -12,7 +12,7 @@ from Train import LEVEL_HORIZONTAL_SIZE, LEVEL_VERTICAL_SIZE, LEVEL_MATRIX_HORIZ
 XRANGE = round(50 * (LEVEL_MATRIX_HORIZONTAL_SIZE / LEVEL_HORIZONTAL_SIZE))
 YRANGE = round(5 * (LEVEL_MATRIX_VERTICAL_SIZE / LEVEL_VERTICAL_SIZE))
 
-class DumbAgent(Agent):
+class LeftRightAgent(Agent):
 
     def start_episode(self):
         self.direction = 'right'

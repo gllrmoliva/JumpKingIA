@@ -30,7 +30,15 @@ from pathlib import Path
 class JKGame:
 	""" Overall class to manga game aspects """
         
-	def __init__(self, max_step=float('inf')):
+	"""
+	Constructor para instanciar la aplicación.
+	Parametros:
+		max_step: Cantidad de 'pasos' antes de terminar un episodio
+		FPS: Cantidad de cuadros por segundo
+			0: Valor por defecto en el repositorio original (Se llama a la variable de entorno "fps")
+			-1: FPS desbloqueado	
+	"""
+	def __init__(self, max_step=float('inf'), FPS=0):
 
 		pygame.init()
 
@@ -38,7 +46,14 @@ class JKGame:
 
 		self.clock = pygame.time.Clock()
 
-		self.fps = int(os.environ.get("fps"))
+		if FPS == 0:
+			self.fps = int(os.environ.get("fps"))
+		elif FPS == -1:
+			self.fps = None
+		elif FPS < 0:
+			raise ValueError("Invalid value of FPS parameter")
+		else:
+			self.fps = FPS
  
 		self.bg_color = (0, 0, 0)
 
@@ -96,12 +111,14 @@ class JKGame:
 		return available
 
 	def step(self, action):
-		'''Metodo para realizar un paso en el juego'''
+		'''Metodo para realizar un paso en el juego,
+		¡Sólo es utilizado para cuando se ejecuta el juego con un agente! En caso de ser un jugador humano se ejectua running()'''
 		old_level = self.king.levels.current_level
 		old_y = self.king.y
 		#old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
 		while True:
-			self.clock.tick(self.fps)
+			if self.fps != None: # fps desbloqueados
+				self.clock.tick(self.fps)
 			self._check_events()
 			if not os.environ["pause"]:
 				if not self.move_available():
@@ -142,7 +159,8 @@ class JKGame:
 		while True:
 			#state = [self.king.levels.current_level, self.king.x, self.king.y, self.king.jumpCount]
 			#print(state)
-			self.clock.tick(self.fps)
+			if self.fps != None: # fps desbloqueados
+				self.clock.tick(self.fps)
 			self._check_events()
 			if not os.environ["pause"]:
 				self._update_gamestuff()
