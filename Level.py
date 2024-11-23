@@ -9,19 +9,20 @@ import collections
 import os
 import math
 import sys
-from hiddenwalls import HiddenWalls
+from Gameplay.hiddenwalls import HiddenWalls
 from Platforms import Platforms
-from Background import Backgrounds
-from Props import Props
-from weather import Weathers
-from scrolling import Scrollers
-from BackgroundMusic import BackgroundAudio
-from NPC import NPCs
-from Names import Names
-from Readable import Readables
-from Flyers import Flyers
-from Ending_Animation import Ending_Animation
-from Wind import Wind
+from Gameplay.Background import Backgrounds
+from Gameplay.Props import Props
+from Gameplay.weather import Weathers
+from Gameplay.scrolling import Scrollers
+from Gameplay.BackgroundMusic import BackgroundAudio
+from Gameplay.NPC import NPCs
+from Gameplay.Names import Names
+from Gameplay.Readable import Readables
+from Gameplay.Flyers import Flyers
+from Gameplay.Ending_Animation import Ending_Animation
+from Gameplay.Wind import Wind
+from pathlib import Path
 
 class Level:
 
@@ -77,11 +78,11 @@ class Levels:
 
 		self.platforms = Platforms()
 
-		self.background = Backgrounds("BG").backgrounds
+		self.background = Backgrounds(str(Path("Assets/BG"))).backgrounds
 
-		self.midground = Backgrounds("MG").backgrounds
+		self.midground = Backgrounds(str(Path("Assets/MG"))).backgrounds
 
-		self.foreground = Backgrounds("FG").backgrounds
+		self.foreground = Backgrounds(str(Path("Assets/FG"))).backgrounds
 
 		self.props = Props().props
 
@@ -131,6 +132,7 @@ class Levels:
 
 	def blit1(self):
 		'''Metodo que blitea (?) los objetos del nivel 1'''
+		# Método que muestra en pantalla los objetos "del fondo" (Están visualmente atrás del resto)
 
 		try:
 
@@ -165,6 +167,7 @@ class Levels:
 
 	def blit2(self):
 		'''Metodo que blitea (?) los objetos del nivel 2'''
+		# Método que muestra en pantalla los objetos "en primer plano" (Están visualmente por encima del resto)
 
 		try:
 

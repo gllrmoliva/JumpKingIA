@@ -4,11 +4,15 @@
 #
 #
 
+# Corresponde al inicio de la aplicación, incluye la inicialización de componentes (audio, imagen), presentación del desarrollador y el titulo del juego
+# No encontré nada que nos interese, pero por si acaso revisar mejor.
+
 import pygame
 import math
 import os
 import re
 from pathlib import Path
+
 
 class Start:
 
@@ -42,9 +46,9 @@ class Start:
 
 		audio = {}
 
-		for audio_name in os.listdir(str(Path("Audio/start"))):
+		for audio_name in os.listdir(str(Path("Assets/Audio/start"))):
 
-			audio[re.match(r"[^.]+", audio_name).group()] = pygame.mixer.Sound(str(Path(f"Audio/start/{audio_name}")))
+			audio[re.match(r"[^.]+", audio_name).group()] = pygame.mixer.Sound(str(Path(f"Assets/Audio/start/{audio_name}")))
 
 		return audio		
 
@@ -52,9 +56,9 @@ class Start:
 
 		images = {}
 
-		for image_name in os.listdir(str(Path("images/logos"))):
+		for image_name in os.listdir(str(Path("Assets/images/logos"))):
 
-			images[re.match(r"[^.]+", image_name).group()] = pygame.image.load(str(Path(f"images/logos/{image_name}"))).convert_alpha()
+			images[re.match(r"[^.]+", image_name).group()] = pygame.image.load(str(Path(f"Assets/images/logos/{image_name}"))).convert_alpha()
 
 		return images
 
@@ -270,7 +274,7 @@ class Text(Title):
 
 	def __init__(self, text):
 
-		self.font = pygame.font.Font(str(Path("Fonts/ttf_pixolde_bold.ttf")), 20)
+		self.font = pygame.font.Font(str(Path("Assets/Fonts/ttf_pixolde_bold.ttf")), 20)
 
 		self.text = self._fold(text)
 

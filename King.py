@@ -4,53 +4,57 @@
 #
 #
 
+'''
+Clase que modela el rey y sus controles
+'''
+
 import pygame
 import math
 import collections
 import os
 import numpy
 import random
-from Timer import Timer
-from physics import Physics
-from spritesheet import SpriteSheet
-from King_Sprites import King_Sprites
-from King_Particles import King_Particle
-from King_Audio import King_Audio
+from Gameplay.Timer import Timer
+from Gameplay.physics import Physics
+from Gameplay.spritesheet import SpriteSheet
+from Gameplay.King_Sprites import King_Sprites
+from Gameplay.King_Particles import King_Particle
+from Gameplay.King_Audio import King_Audio
 from pathlib import Path
 
 # action list
 def get_action_dict(agentCommand):
 	'''Metodo que retorna un diccionario con las teclas que se deben presionar'''
 	keys = {}
-	if agentCommand == 0:
+	if agentCommand == 0: # Moverse a la derecha
 		keys[pygame.K_SPACE] = 0
 		keys[pygame.K_RIGHT] = 1
 		keys[pygame.K_LEFT] = 0
 
-	elif agentCommand == 1:
+	elif agentCommand == 1: # a la izquierda
 		keys[pygame.K_SPACE] = 0
 		keys[pygame.K_RIGHT] = 0
 		keys[pygame.K_LEFT] = 1
 
-	elif agentCommand == 2:
+	elif agentCommand == 2: # iniciar la carga de un salto a la derecha
 		keys[pygame.K_SPACE] = 1
 		keys[pygame.K_RIGHT] = 1
 		keys[pygame.K_LEFT] = 0
 
-	elif agentCommand == 3:
+	elif agentCommand == 3: # salto a la izquierda
 		keys[pygame.K_SPACE] = 1
 		keys[pygame.K_RIGHT] = 0
 		keys[pygame.K_LEFT] = 1
+	
+	elif agentCommand == 4: # salto vertical. No tiene mucho sentido que un agente decida tomar esta acción
+		keys[pygame.K_SPACE] = 1
+		keys[pygame.K_RIGHT] = 0
+		keys[pygame.K_LEFT] = 0
 
-	# elif agentCommand == 4:
-	# 	keys[pygame.K_SPACE] = 0
-	# 	keys[pygame.K_RIGHT] = 0
-	# 	keys[pygame.K_LEFT] = 0
-	#
-	# elif agentCommand == 5:
-	# 	keys[pygame.K_SPACE] = 1
-	# 	keys[pygame.K_RIGHT] = 0
-	# 	keys[pygame.K_LEFT] = 0
+	elif agentCommand == 5: # quedarse quieto. Un agente no deberia (creo) nunca tomar esta acción
+		keys[pygame.K_SPACE] = 0
+		keys[pygame.K_RIGHT] = 0
+		keys[pygame.K_LEFT] = 0
 
 	else:
 		print(agentCommand)
@@ -180,9 +184,9 @@ class King():
 
 		# Particles
 
-		self.jump_particle = King_Particle(str(Path("images/particles/jump_particle.png")), 5, 1, 32)
+		self.jump_particle = King_Particle(str(Path("Assets/images/particles/jump_particle.png")), 5, 1, 32)
 
-		self.snow_jump_particle = King_Particle(str(Path("images/particles/snow_jump_particle.png")), 4, 3, 36)
+		self.snow_jump_particle = King_Particle(str(Path("Assets/images/particles/snow_jump_particle.png")), 4, 3, 36)
 
 		self.level_change = 0
 

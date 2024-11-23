@@ -4,6 +4,10 @@
 #
 #
 
+'''
+Contiene, de forma codificada, las hitbox de cada nivel
+'''
+
 import pygame
 import collections
 import os
