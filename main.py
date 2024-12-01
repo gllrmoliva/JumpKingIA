@@ -9,7 +9,9 @@ from pathlib import Path
 from DDQN import DDQN
 
 import Train
-from ListAgent import ListAgent
+from Agents.RandomAgent import RandomAgent
+from Agents.LeftRightAgent import LeftRightAgent
+from Agents.ListAgent import ListAgent
 from JumpKing import JKGame
 
 '''
@@ -29,7 +31,7 @@ def train():
 		# 5: 'idle',
 	}
 	agent = DDQN()
-	env = JKGame(max_step=1000)
+	env = JKGame(steps_per_episode=1000)
 	num_episode = 100000
 
 	for i in range(num_episode):
@@ -53,5 +55,5 @@ if __name__ == "__main__":
 
 	#train()
 
-	t = Train.Train(ListAgent(), FPS=-1)
+	t = Train.Train(ListAgent(), steps_per_second=-1)
 	t.run()

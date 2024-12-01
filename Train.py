@@ -1,8 +1,7 @@
 from JumpKing import JKGame
-import numpy as np
-import numpy.typing as npt
-import cv2
 import struct
+from Constants import *
+from Matrix import *
 
 '''
 Este archivo tiene la función de generalizar lo que es entrenar un agente,
@@ -12,89 +11,8 @@ El repositorio original esta limitado en ciertas funcionalidades (principalmente
 por lo tanto acá se definen clases extras como State, Environment que añaden estas funcionalidades
 '''
 
-'''
----- Parametros, constantes y variables importantes ----
-'''
-# Parametros de depuración
-DEBUG_LEVEL_MATRIX = True # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
-
-# Parametros (o constante?) del espacio de acciones
-# ¡No se esta usando en ningun lado! tampoco creo que sea necesario. Sirve más de documentación que otra cosa
-ACTION_SPACE : dict[int, str] = {
-0: 'right',
-1: 'left',
-2: 'right+space',
-3: 'left+space',
-4: 'space',   # No es util considerar esta acción, por ahora al menos.
-5: 'idle',    # No es util considerar esta acción
-}
-
-# Parametros de la matriz del nivel
-LEVEL_MATRIX_HORIZONTAL_SIZE = 48
-LEVEL_MATRIX_VERTICAL_SIZE = 36
-
-# Constantes del nivel
-LEVEL_HORIZONTAL_SIZE = 480 # Cuanto mide el nivel horizontalmente, es una constante del repositorio original, no modificable
-LEVEL_VERTICAL_SIZE = 360 # Cuanto mide el nivel verticalmente, es una constante del repositorio original, no modificable
 
 
-
-
-
-if DEBUG_LEVEL_MATRIX:
-    cv2.namedWindow("DEBUG_LEVEL_MATRIX", cv2.WINDOW_NORMAL)
-
-# Función que obtiene una matriz que representa las colisiones del nivel
-# Una celda vale 1 si hay una hitbox en la sección correspondiente del nivel. 0 en otro caso
-# Recibe una instancia de Environment y del numero del nivel en cuestion.
-def get_level_matrix(env, level):
-    matrix = np.zeros((
-                      LEVEL_MATRIX_VERTICAL_SIZE,
-                      LEVEL_MATRIX_HORIZONTAL_SIZE),
-                      dtype=np.uint8)
-    
-    platforms = env.game.levels.platforms.rectangles.levels[level]
-
-    for p in platforms:
-        x = round(p[0] * (LEVEL_MATRIX_HORIZONTAL_SIZE/LEVEL_HORIZONTAL_SIZE))
-        if x < 0: x = 0
-        elif x >= LEVEL_MATRIX_HORIZONTAL_SIZE: x = LEVEL_MATRIX_HORIZONTAL_SIZE - 1
-
-        y = round(p[1] * (LEVEL_MATRIX_VERTICAL_SIZE/LEVEL_VERTICAL_SIZE))
-        if y < 0: y = 0
-        elif y >= LEVEL_MATRIX_VERTICAL_SIZE: y = LEVEL_MATRIX_VERTICAL_SIZE - 1
-
-        w = round(p[2] * (LEVEL_MATRIX_HORIZONTAL_SIZE/LEVEL_HORIZONTAL_SIZE))
-        if x + w >= LEVEL_MATRIX_HORIZONTAL_SIZE: w = LEVEL_MATRIX_HORIZONTAL_SIZE - 1 - x
-
-        h = round(p[3] * (LEVEL_MATRIX_VERTICAL_SIZE/LEVEL_VERTICAL_SIZE))
-        if y + h >= LEVEL_MATRIX_VERTICAL_SIZE: h = LEVEL_MATRIX_VERTICAL_SIZE - 1 - y
-
-        slope = p[4]
-
-        if slope == 0:
-            matrix[y:y+h, x:x+w] = 1
-        elif slope == (1, 1):
-            triangle_mask = np.tril(np.ones((h, w)))
-            reflected_triangle_mask = triangle_mask[:, ::-1]
-            matrix[y:y+h, x:x+w] = reflected_triangle_mask 
-        elif slope == (-1, 1):
-            triangle_mask = np.tril(np.ones((h, w)))
-            matrix[y:y+h, x:x+w] = triangle_mask 
-        elif slope == (1, -1):
-            triangle_mask = np.triu(np.ones((h, w)))
-            reflected_triangle_mask = triangle_mask[:, ::-1]
-            matrix[y:y+h, x:x+w] = reflected_triangle_mask 
-        elif slope == (-1, -1):
-            triangle_mask = np.triu(np.ones((h, w)))
-            matrix[y:y+h, x:x+w] = triangle_mask 
-
-    if DEBUG_LEVEL_MATRIX:
-        frame = cv2.resize(matrix * 255, (400, 300))
-        cv2.imshow("DEBUG_LEVEL_MATRIX", frame)
-        cv2.waitKey(1) #ms
-    
-    return matrix
 
 """
 La representación de un estado en el repositorio original es bastante limitada
@@ -212,8 +130,8 @@ class Agent():
 Es una clase que 'envuelve' a JKGame para que sus metodos devuelvan los estados como instancias de State()
 '''
 class Environment():
-    def __init__(self, steps_per_episode, FPS):
-        self.game = JKGame(max_step=steps_per_episode, FPS=FPS)
+    def __init__(self, steps_per_episode, steps_per_second):
+        self.game = JKGame(steps_per_episode=steps_per_episode, steps_per_seconds=steps_per_second)
     
     def reset(self):
         done, state = self.game.reset()
@@ -231,21 +149,20 @@ class Train():
     Parametros:
         agent: Qué agente (es decir, que método de aprendizaje) se va a usar. Recibe una instancia.
         steps_per_episode: Cuantos 'pasos' realizar por episodio
-        numbers_of_episode: Cuantos episodios a realizar
-        FPS: Tasa de cuadros con las que se va a ejecutar el juego
-            -1: Desbloqueado
-            0: Utilizar el código del repositorio original (Se llama a una variable de entorno) [Valor por defecto]   
+        number_of_episodes: Cuantos episodios a realizar
+		steps_per_seconds: Cantidad de 'pasos' de la simulación que se realizan en un segundo
+			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
     '''
     def __init__(self,
                  agent : Agent,
-                 steps_per_episode=1000,
-                 numbers_of_episode=100000,
-                 FPS=0):
+                 steps_per_episode=STEPS_PER_EPISODE,
+                 number_of_episodes=NUMBER_OF_EPISODES,
+                 steps_per_second=STEPS_PER_SECOND):
         
         self.agent = agent
         self.steps_per_episode = steps_per_episode
-        self.numbers_of_episode = numbers_of_episode
-        self.env = Environment(self.steps_per_episode, FPS)
+        self.numbers_of_episode = number_of_episodes
+        self.env = Environment(self.steps_per_episode, steps_per_second)
 
     def run(self):
 

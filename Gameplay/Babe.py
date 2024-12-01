@@ -8,7 +8,7 @@ import pygame
 import math
 import os
 from pathlib import Path
-from King import King
+from Gameplay.King import King
 from Gameplay.Timer import Timer
 from Gameplay.physics import Physics
 from Gameplay.spritesheet import SpriteSheet
