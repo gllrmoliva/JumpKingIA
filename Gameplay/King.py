@@ -22,6 +22,8 @@ from Gameplay.King_Particles import King_Particle
 from Gameplay.King_Audio import King_Audio
 from pathlib import Path
 
+from Constants import NO_INTERFACE
+
 # action list
 def get_action_dict(agentCommand):
 	'''Metodo que retorna un diccionario con las teclas que se deben presionar'''
@@ -72,7 +74,14 @@ class King():
 
 		# Static 
 
-		self.screen = screen
+		if not NO_INTERFACE:
+
+			self.screen = screen
+		
+		else:
+
+			self.screen_width = int(os.environ.get("screen_width"))
+			self.screen_height = int(os.environ.get("screen_height"))
 
 		self.sprites = King_Sprites().king_images
 
@@ -751,8 +760,14 @@ class King():
 							self.lastCollision = platform
 		
 		#Hits The Sides
+		if not NO_INTERFACE:
 
-		if self.rect_x + self.rect_width > self.screen.get_width():
+			rightCollsionCondition = self.rect_x + self.rect_width > self.screen.get_width()
+		else:
+
+			rightCollsionCondition = self.rect_x + self.rect_width > self.screen_width
+
+		if rightCollsionCondition:
 
 			self.rect_x = self.screen.get_width() - self.rect_width
 			self.collideRight = True
@@ -826,13 +841,27 @@ class King():
 
 		if self.rect_y < 0 and self.levels.current_level < self.levels.max_level:
 
-			self.rect_y += self.screen.get_height() + self.rect_width
+			if not NO_INTERFACE:
+				self.rect_y += self.screen.get_height() + self.rect_width
+			else:
+				self.rect_y += self.screen_height + self.rect_width
 			self.levels.current_level += 1
 			self.level_change += 1
 
-		if self.rect_y > self.screen.get_height():
+		if not NO_INTERFACE:
 
-			self.rect_y -= self.screen.get_height() + self.rect_width
+			upperCollsionCondition = self.rect_y > self.screen.get_height()
+		else:
+
+			upperCollsionCondition = self.rect_y > self.screen_height
+
+
+		if upperCollsionCondition:
+
+			if not NO_INTERFACE:
+				self.rect_y -= self.screen.get_height() + self.rect_width
+			else:
+				self.rect_y -= self.screen_height + self.rect_width
 			self.levels.current_level -= 1
 			self.level_change -= 1
 

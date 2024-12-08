@@ -25,6 +25,8 @@ from Gameplay.Menu import Menus
 from Gameplay.Start import Start
 from pathlib import Path
 
+from Constants import NO_INTERFACE
+
 # Keyword
 FPS_UNLOCKED = -1
 
@@ -52,17 +54,20 @@ class JKGame:
 			self.fps = FPS_UNLOCKED
 		else:
 			raise ValueError("Invalid value of steps_per_seconds parameter")
- 
-		self.bg_color = (0, 0, 0)
-
+		
 		self.screen = pygame.display.set_mode((int(os.environ.get("screen_width")) * int(os.environ.get("window_scale")), int(os.environ.get("screen_height")) * int(os.environ.get("window_scale"))), pygame.HWSURFACE|pygame.DOUBLEBUF)#|pygame.SRCALPHA)
+		
+		if not NO_INTERFACE:
+ 
+			self.bg_color = (0, 0, 0)
+			self.game_screen = pygame.Surface((int(os.environ.get("screen_width")), int(os.environ.get("screen_height"))), pygame.HWSURFACE|pygame.DOUBLEBUF)#|pygame.SRCALPHA)
+			self.game_screen_x = 0
+			pygame.display.set_icon(pygame.image.load(str(Path("Assets/images/sheets/JumpKingIcon.ico"))))
+		
+		else:
 
-		self.game_screen = pygame.Surface((int(os.environ.get("screen_width")), int(os.environ.get("screen_height"))), pygame.HWSURFACE|pygame.DOUBLEBUF)#|pygame.SRCALPHA)
-
-		self.game_screen_x = 0
-
-		pygame.display.set_icon(pygame.image.load(str(Path("Assets/images/sheets/JumpKingIcon.ico"))))
-
+			self.game_screen = None
+		
 		self.levels = Levels(self.game_screen)
 
 		self.king = King(self.game_screen, self.levels)
@@ -123,10 +128,11 @@ class JKGame:
 					action = None
 				self._update_gamestuff(action=action)
 
-			self._update_gamescreen()
-			self._update_guistuff()
-			self._update_audio()
-			pygame.display.update()
+			if not NO_INTERFACE:
+				self._update_gamescreen()
+				self._update_guistuff()
+				self._update_audio()
+				pygame.display.update()
 
 
 			if self.move_available():
@@ -163,10 +169,11 @@ class JKGame:
 			if not os.environ["pause"]:
 				self._update_gamestuff()
 
-			self._update_gamescreen()
-			self._update_guistuff()
-			self._update_audio()
-			pygame.display.update()
+			if not NO_INTERFACE:
+				self._update_gamescreen()
+				self._update_guistuff()
+				self._update_audio()
+				pygame.display.update()
 
 	def _check_events(self):
 		'''Metodo para verificar eventos'''

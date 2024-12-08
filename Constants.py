@@ -6,9 +6,10 @@
 
 
 '''
-    Parametros de depuración
+    Parametros de depuración y ejecución
 '''
-DEBUG_LEVEL_MATRIX = True # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
+DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
+NO_INTERFACE = True # ¡Falta verificar que no da fallos! ¡Inseguro!
 
 '''
     Valores por defecto de los parametros de entrenamiento (Modificable)
