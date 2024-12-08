@@ -10,7 +10,7 @@ import os
 import math
 import sys
 from Gameplay.hiddenwalls import HiddenWalls
-from Platforms import Platforms
+from Gameplay.Platforms import Platforms
 from Gameplay.Background import Backgrounds
 from Gameplay.Props import Props
 from Gameplay.weather import Weathers

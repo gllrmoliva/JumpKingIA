@@ -17,20 +17,28 @@ import numpy as np
 from Gameplay.environment import Environment
 from Gameplay.spritesheet import SpriteSheet
 from Gameplay.Background import Backgrounds
-from King import King
+from Gameplay.King import King
 from Gameplay.Babe import Babe
-from Level import Levels
-from Menu import Menus
+from Gameplay.Level import Levels
+from Gameplay.Menu import Menus
 
-from Start import Start
-
+from Gameplay.Start import Start
 from pathlib import Path
 
+# Keyword
+FPS_UNLOCKED = -1
 
 class JKGame:
 	""" Overall class to manga game aspects """
         
-	def __init__(self, max_step=float('inf')):
+	"""
+	Constructor para instanciar la aplicación.
+	Parametros:
+		steps_per_episode: Cantidad de 'pasos' antes de terminar un episodio
+		steps_per_seconds: Cantidad de 'pasos' de la simulación que se realizan en un segundo
+			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
+	"""
+	def __init__(self, steps_per_episode, steps_per_seconds):
 
 		pygame.init()
 
@@ -38,7 +46,12 @@ class JKGame:
 
 		self.clock = pygame.time.Clock()
 
-		self.fps = int(os.environ.get("fps"))
+		if steps_per_seconds > 0:
+			self.fps = steps_per_seconds
+		elif steps_per_seconds == -1:
+			self.fps = FPS_UNLOCKED
+		else:
+			raise ValueError("Invalid value of steps_per_seconds parameter")
  
 		self.bg_color = (0, 0, 0)
 
@@ -61,7 +74,7 @@ class JKGame:
 		self.start = Start(self.game_screen, self.menus)
 
 		self.step_counter = 0
-		self.max_step = max_step
+		self.max_step = steps_per_episode
 
 		self.visited = {}
 
@@ -96,12 +109,14 @@ class JKGame:
 		return available
 
 	def step(self, action):
-		'''Metodo para realizar un paso en el juego'''
+		'''Metodo para realizar un paso en el juego,
+		¡Sólo es utilizado para cuando se ejecuta el juego con un agente! En caso de ser un jugador humano se ejectua running()'''
 		old_level = self.king.levels.current_level
 		old_y = self.king.y
 		#old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
 		while True:
-			self.clock.tick(self.fps)
+			if self.fps != FPS_UNLOCKED: # fps desbloqueados
+				self.clock.tick(self.fps)
 			self._check_events()
 			if not os.environ["pause"]:
 				if not self.move_available():
@@ -142,7 +157,8 @@ class JKGame:
 		while True:
 			#state = [self.king.levels.current_level, self.king.x, self.king.y, self.king.jumpCount]
 			#print(state)
-			self.clock.tick(self.fps)
+			if self.fps != FPS_UNLOCKED: # fps desbloqueados
+				self.clock.tick(self.fps)
 			self._check_events()
 			if not os.environ["pause"]:
 				self._update_gamestuff()
