@@ -162,6 +162,8 @@ class Train():
                  steps_per_episode=STEPS_PER_EPISODE,
                  number_of_episodes=NUMBER_OF_EPISODES,
                  steps_per_second=STEPS_PER_SECOND,
+                 agent_loadpath=None,
+                 agent_savepath=None,
                  csv_agentname="UNNAMED",
                  csv_savepath=None):
         
@@ -169,12 +171,16 @@ class Train():
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = number_of_episodes
         self.env : Environment = Environment(self.steps_per_episode, steps_per_second)
+        self.loadpath = agent_loadpath
+        self.savepath = agent_savepath
 
         self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
 
     def run(self):
 
         self.episode = 1
+
+        self.agent.load(self.loadpath)
 
         while self.episode <= self.numbers_of_episode:
 
@@ -205,6 +211,8 @@ class Train():
 
             self.episode += 1
         
+        self.agent.save(self.savepath)
+
         self.csv.end()
 
 '''
