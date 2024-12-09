@@ -137,7 +137,7 @@ class JKGame:
 
 			if self.move_available():
 				self.step_counter += 1
-				state = [self.king.levels.current_level, self.king.x, self.king.y, self.king.jumpCount]
+				state = [self.king.levels.current_level, int(self.king.rect_x), int(self.king.rect_y), self.king.jumpCount]
 				##################################################################################################
 				# Define the reward from environment                                                             #
 				##################################################################################################

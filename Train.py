@@ -1,5 +1,7 @@
 from JumpKing import JKGame
 import struct
+import csv
+from pathlib import Path
 from Constants import *
 from Matrix import *
 
@@ -152,46 +154,95 @@ class Train():
         number_of_episodes: Cuantos episodios a realizar
 		steps_per_seconds: Cantidad de 'pasos' de la simulación que se realizan en un segundo
 			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
+        csv_agentname: Nombre del agente en el .csv generado
+        csv_savepath: Ruta donde guardar el .csv con las estadisticas del entrenamiento
     '''
     def __init__(self,
                  agent : Agent,
                  steps_per_episode=STEPS_PER_EPISODE,
                  number_of_episodes=NUMBER_OF_EPISODES,
-                 steps_per_second=STEPS_PER_SECOND):
+                 steps_per_second=STEPS_PER_SECOND,
+                 csv_agentname="UNNAMED",
+                 csv_savepath=None):
         
-        self.agent = agent
+        self.agent : Agent = agent
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = number_of_episodes
-        self.env = Environment(self.steps_per_episode, steps_per_second)
+        self.env : Environment = Environment(self.steps_per_episode, steps_per_second)
+
+        self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
 
     def run(self):
 
-        for i in range(self.numbers_of_episode):
+        self.episode = 1
+
+        while self.episode <= self.numbers_of_episode:
 
             self.agent.start_episode()
 
-            state = self.env.reset()
+            self.state = self.env.reset()
 
-            while not state.done:
+            self.step = 0
 
-                action = self.agent.select_action(State.encode(state))
+            while not self.state.done:
+
+                self.csv.update()
+
+                action = self.agent.select_action(State.encode(self.state))
 
                 if action not in ACTION_SPACE.keys() : 
                     raise ValueError("Given action not in Action Space!")
 
                 next_state = self.env.step(action)
 
-                self.agent.train(State.encode(state), action, State.encode(next_state))
+                self.agent.train(State.encode(self.state), action, State.encode(next_state))
 
-                state = next_state
+                self.state = next_state
+
+                self.step += 1
             
             self.agent.end_episode()
+
+            self.episode += 1
+        
+        self.csv.end()
 
 '''
 TODO: Para iniciar el juego con función de evaluar un agente ya entrenado
 '''
 class Evaluate():
     pass
+
+'''
+Clase para separar la lógica de la generación de CSV
+'''
+class CSV():
+    def __init__(self, agentname, savepath, train : Train):
+        self.agentname = agentname
+        self.path = str(Path(savepath))
+        self.train = train
+        
+        self.file = open(self.path, mode='w', newline='')
+        self.writer = csv.writer(self.file)
+        self.max_height = -1
+        self.current_episode = -1
+
+        self.writer.writerow(['AGENT_NAME', 'EPISODE', 'STEP', 'MAX_HEIGHT'])
+    
+    def update(self):
+        if self.train.step % CSV_COOLDOWN == 0:
+
+            if self.current_episode != self.train.episode:
+                self.current_episode = self.train.episode
+                self.max_height = -1
+
+            current_height = self.train.state.y + self.train.state.level * LEVEL_VERTICAL_SIZE
+            self.max_height = max(self.max_height, current_height)
+
+            self.writer.writerow([self.agentname, self.train.episode, self.train.step, self.max_height])
+
+    def end(self):
+        self.file.close()
 
     
 

@@ -10,13 +10,14 @@
 '''
 DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 NO_INTERFACE = True # ¡Falta verificar que no da fallos! ¡Inseguro!
+CSV_COOLDOWN = 10 # Cuantos pasos deben pasar para que volver a escribir en un .csv
 
 '''
     Valores por defecto de los parametros de entrenamiento (Modificable)
 '''
 STEPS_PER_EPISODE = 1000
-NUMBER_OF_EPISODES = 1000000
-STEPS_PER_SECOND = 60
+NUMBER_OF_EPISODES = 1
+STEPS_PER_SECOND = -1
 
 '''
     Constantes del modelo de entrenamiento (No modificable)
