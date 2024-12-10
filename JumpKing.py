@@ -25,7 +25,7 @@ from Gameplay.Menu import Menus
 from Gameplay.Start import Start
 from pathlib import Path
 
-from Constants import NO_INTERFACE
+from Constants import NO_INTERFACE, DEBUG_OLD_COORDINATE_SYSTEM
 
 # Keyword
 FPS_UNLOCKED = -1
@@ -80,6 +80,7 @@ class JKGame:
 
 		self.step_counter = 0
 		self.max_step = steps_per_episode
+		self.done = False
 
 		self.visited = {}
 
@@ -98,13 +99,12 @@ class JKGame:
 		os.environ["session"] = "0"
 
 		self.step_counter = 0
-		done = False
-		state = [self.king.levels.current_level, self.king.x, self.king.y, self.king.jumpCount]
+		self.done = False
 
 		self.visited = {}
 		self.visited[(self.king.levels.current_level, self.king.y)] = 1
 
-		return done, state
+		return
 
 	def move_available(self):
 		'''Metodo para conseguir movimientos disponibles'''
@@ -136,11 +136,13 @@ class JKGame:
 
 
 			if self.move_available():
+
 				self.step_counter += 1
-				state = [self.king.levels.current_level, int(self.king.rect_x), int(self.king.rect_y), self.king.jumpCount]
+
 				##################################################################################################
 				# Define the reward from environment                                                             #
 				##################################################################################################
+				'''
 				if self.king.levels.current_level > old_level or (self.king.levels.current_level == old_level and self.king.y < old_y):
 					reward = 0
 				else:
@@ -149,10 +151,12 @@ class JKGame:
 						self.visited[(self.king.levels.current_level, self.king.y)] = self.visited[(old_level, old_y)] + 1
 
 					reward = -self.visited[(self.king.levels.current_level, self.king.y)]
+				'''
 				####################################################################################################
 
-				done = True if self.step_counter > self.max_step else False
-				return state, reward, done
+				self.done = True if self.step_counter > self.max_step else False
+				
+				return
 
 	def running(self):
 		"""

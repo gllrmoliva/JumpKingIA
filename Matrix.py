@@ -13,14 +13,14 @@ if DEBUG_LEVEL_MATRIX:
 
 # Función que obtiene una matriz que representa las colisiones del nivel
 # Una celda vale 1 si hay una hitbox en la sección correspondiente del nivel. 0 en otro caso
-# Recibe una instancia de Environment y del numero del nivel en cuestion.
-def get_level_matrix(env, level):
+# Recibe una instancia de JKGame y del numero del nivel en cuestion.
+def get_level_matrix(game, level):
     matrix = np.zeros((
                       LEVEL_MATRIX_VERTICAL_SIZE,
                       LEVEL_MATRIX_HORIZONTAL_SIZE),
                       dtype=np.uint8)
     
-    platforms = env.game.levels.platforms.rectangles.levels[level]
+    platforms = game.levels.platforms.rectangles.levels[level]
 
     for p in platforms:
 

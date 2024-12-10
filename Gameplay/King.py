@@ -72,7 +72,7 @@ class King():
 
 	def __init__(self, screen, levels):
 
-		# Static 
+		# Variables nuevas / modificadas
 
 		if not NO_INTERFACE:
 
@@ -82,6 +82,8 @@ class King():
 
 			self.screen_width = int(os.environ.get("screen_width"))
 			self.screen_height = int(os.environ.get("screen_height"))
+
+		# Static 
 
 		self.sprites = King_Sprites().king_images
 

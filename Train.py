@@ -4,6 +4,7 @@ import csv
 from pathlib import Path
 from Constants import *
 from Matrix import *
+from datetime import datetime
 
 '''
 Este archivo tiene la función de generalizar lo que es entrenar un agente,
@@ -12,8 +13,6 @@ con el objetivo de idealmente programar un agente con cierta independencia del r
 El repositorio original esta limitado en ciertas funcionalidades (principalmente estados de juego)
 por lo tanto acá se definen clases extras como State, Environment que añaden estas funcionalidades
 '''
-
-
 
 
 """
@@ -33,21 +32,22 @@ class State():
     '''
     Busca los valores que describen el estado y los almacena en los atributos
     Recibe como parametro:
-        env: instancia de Environment. Esto es porque es la unica forma de acceder a variables del repositorio original
-        built_in_state : La representación de un estado en el repositorio original
-                         Conformado por: Nivel actual, x, y, contador del sato
-        done: Verdadero si se llegó al final del episodio
+        game: instancia de JKGame. Esto es porque es la forma de acceder a variables del repositorio original
     '''                  
     @staticmethod
-    def get_state_from_built_in_state(env, built_in_state, done) -> 'State':
+    def get_state_from_game(game : JKGame) -> 'State':
         state = State()
 
-        state.level = built_in_state[0]
-        state.x = built_in_state[1]
-        state.y = built_in_state[2]
-        state.jumpCount = built_in_state[3]
-        state.done = done
-        state.level_matrix = get_level_matrix(env, state.level)
+        state.level = game.king.levels.current_level
+        if DEBUG_OLD_COORDINATE_SYSTEM:
+            state.x = game.king.x + 5 # numero magico
+            state.y = game.king.y + 9 # numero magico
+        else:
+            state.x = round(game.king.rect_x)
+            state.y = round(game.king.rect_y)
+        state.jumpCount = game.king.jumpCount
+        state.done = game.done
+        state.level_matrix = get_level_matrix(game, state.level)
 
         return state
     
@@ -136,12 +136,12 @@ class Environment():
         self.game = JKGame(steps_per_episode=steps_per_episode, steps_per_seconds=steps_per_second)
     
     def reset(self):
-        done, state = self.game.reset()
-        return State.get_state_from_built_in_state(self, state, done)
+        self.game.reset()
+        return State.get_state_from_game(self.game)
 
     def step(self, action):
-        next_state , reward, done = self.game.step(action)
-        return State.get_state_from_built_in_state(self, next_state, done)
+        self.game.step(action)
+        return State.get_state_from_game(self.game)
 
 '''
 Para iniciar el juego con función de entrenar un agente
@@ -227,7 +227,14 @@ class CSV():
         self.max_height = -1
         self.current_episode = -1
 
-        self.writer.writerow(['AGENT_NAME', 'EPISODE', 'STEP', 'MAX_HEIGHT'])
+        self.writer.writerow(['AGENT_NAME',
+                              'EPISODE',
+                              'STEP',
+                              'DATE',
+                              'TIME',
+                              'MAX_HEIGHT',
+                              'X',
+                              'Y'])
     
     def update(self):
         if self.train.step % CSV_COOLDOWN == 0:
@@ -239,7 +246,19 @@ class CSV():
             current_height = self.train.state.y + self.train.state.level * LEVEL_VERTICAL_SIZE
             self.max_height = max(self.max_height, current_height)
 
-            self.writer.writerow([self.agentname, self.train.episode, self.train.step, self.max_height])
+            now = datetime.now()
+
+            date = now.strftime("%Y-%m-%d")
+            time = now.strftime("%H:%M:%S")
+
+            self.writer.writerow([self.agentname,
+                                  self.train.episode,
+                                  self.train.step,
+                                  date,
+                                  time,
+                                  self.max_height,
+                                  self.train.state.x,
+                                  self.train.state.y])
 
     def end(self):
         self.file.close()

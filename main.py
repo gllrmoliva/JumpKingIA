@@ -55,5 +55,5 @@ if __name__ == "__main__":
 
 	#train()
 
-	t = Train.Train(ListAgent(), csv_savepath="csvtest.csv")
+	t = Train.Train(LeftRightAgent(), csv_savepath="test.csv")
 	t.run()
