@@ -7,5 +7,5 @@ from random import randint
 
 class RandomAgent(Agent):
 
-    def select_action(self, coded_state):
+    def select_action(self, state):
         return randint(0, 3)

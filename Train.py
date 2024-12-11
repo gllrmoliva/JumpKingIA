@@ -22,12 +22,16 @@ Está clase modela un estado y
 class State():
 
     # Attributes
-    level : int = None
-    x : int = None
-    y : int = None
-    jumpCount : int = None
-    done : bool = None
-    level_matrix : npt.NDArray[np.uint64] = None
+    level : int = None                                  # Número del nivel actual
+    x : int = None                                      # Coordenada x del King. Aumenta de izquierda a derecha
+    y : int = None                                      # Coordenada y del King. ¡Aumenta de arriba hacia abajo!
+    height : int = None                                 # Altura total del King, incluyendo niveles anteriores. ¡Aumenta de abajo hacia arriba!
+    max_height : int = None                             # Altura total máxima alcanzada en el episodio
+    max_height_last_step : int = None                   # Altura total máxima alcanzada durante el último paso de juego
+    jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
+    done : bool = None                                  # Acabo el episodio
+    level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
+    next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
 
     '''
     Busca los valores que describen el estado y los almacena en los atributos
@@ -45,60 +49,17 @@ class State():
         else:
             state.x = round(game.king.rect_x)
             state.y = round(game.king.rect_y)
+        
+        state.height = game.height
+        state.max_height = game.max_height
+        state.max_height_last_step = game.max_height_last_step
         state.jumpCount = game.king.jumpCount
         state.done = game.done
-        state.level_matrix = get_level_matrix(game, state.level)
-
-        return state
-    
-    '''
-    Codifica un estado como una serie de bytes (Tengo entendido que es obligatorio para meterlo a una red neuronal)
-    El tamaño de la codificación es fijo.
-    ¡Agregar/eliminar/modificar un atributo de la clase implica tener que cambiar este metodo!
-    '''
-    @staticmethod
-    def encode(state : 'State') -> bytes:
-        # Pack integers and boolean
-        packed_data = struct.pack(
-            '4i?',  # 4 integers and 1 boolean
-            state.level, state.x, state.y, state.jumpCount, state.done
-        )
-        
-        # Flatten the 2D numpy matrix (uint8) and pack it as bytes
-        flattened_matrix = state.level_matrix.flatten()
-        packed_matrix = struct.pack(f'{flattened_matrix.size}B', *flattened_matrix)  # 'B' for uint8 (1 byte per element)
-        
-        # Combine everything into one packed binary string
-        final_packed_data = packed_data + packed_matrix
-        return final_packed_data
-    
-    '''
-    Decodifica la codificación de encode(), devolviendo una instancia de State cuyas variables corresponden a los valores codificados
-    ¡Agregar/eliminar/modificar un atributo de la clase implica tener que cambiar este metodo!
-    '''
-    @staticmethod
-    def decode(coded_state : bytes) -> 'State':
-        # Unpack the first part (4 integers and 1 boolean)
-        unpacked_data = struct.unpack('4i?', coded_state[:17])  # 4 integers (4*4 bytes) + 1 boolean (1 byte)
-        level, x, y, jumpCount, done = unpacked_data
-        
-        # Unpack the 2D matrix (after the header part)
-        matrix_size = LEVEL_MATRIX_VERTICAL_SIZE * LEVEL_MATRIX_HORIZONTAL_SIZE
-        matrix_data = coded_state[17:]
-        unpacked_matrix = struct.unpack(f'{matrix_size}B', matrix_data)  # 'B' for uint8 (1 byte per element)
-        
-        # Convert the unpacked matrix into a 2D numpy array
-        level_matrix = np.array(unpacked_matrix, dtype=np.uint8).reshape((LEVEL_MATRIX_VERTICAL_SIZE, LEVEL_MATRIX_HORIZONTAL_SIZE))
-
-        state = State()
-        
-        state.level = level
-        state.x = x
-        state.y = y
-        state.jumpCount = jumpCount
-        state.done = done
-        state.level_matrix = level_matrix
-        
+        state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
+        state.next_level_matrix = get_level_matrix(game, state.level + 0,
+                                                   matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                                   matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE
+                                                   )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
         return state
 
 '''
@@ -112,11 +73,11 @@ class Agent():
     def start_episode(self):
         pass
     # Devuelve que acción tomar segun un estado de juego
-    def select_action(self, coded_state: bytes):
+    def select_action(self, state: State):
         pass
     # Entrena al modelo sabiendo que acción tomó en un estado, y a que otro estado llevó
     # Acá podria por ejemplo: Calcular recompensa, actualizar recompensa acumulada, etc.
-    def train(self, coded_state: bytes, action: int, coded_next_state: bytes):
+    def train(self, state: State, action: int, next_state: State):
         pass
     # Se llama cuando acaba el episodio.
     def end_episode(self):
@@ -188,14 +149,14 @@ class Train():
 
                 self.csv.update()
 
-                action = self.agent.select_action(State.encode(self.state))
+                action = self.agent.select_action(self.state)
 
                 if action not in ACTION_SPACE.keys() : 
                     raise ValueError("Given action not in Action Space!")
 
                 next_state = self.env.step(action)
 
-                self.agent.train(State.encode(self.state), action, State.encode(next_state))
+                self.agent.train(self.state, action, next_state)
 
                 self.state = next_state
 

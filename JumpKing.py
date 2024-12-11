@@ -25,13 +25,23 @@ from Gameplay.Menu import Menus
 from Gameplay.Start import Start
 from pathlib import Path
 
-from Constants import NO_INTERFACE, DEBUG_OLD_COORDINATE_SYSTEM
+from Constants import LEVEL_VERTICAL_SIZE, NO_INTERFACE, DEBUG_OLD_COORDINATE_SYSTEM
 
 # Keyword
 FPS_UNLOCKED = -1
 
 class JKGame:
 	""" Overall class to manga game aspects """
+
+	"""
+	Función auxiliar para actualizar variables relacionadas a la altura
+	"""
+	def _update_heights(self):
+		self.height = (LEVEL_VERTICAL_SIZE - self.king.rect_y) + self.king.levels.current_level * LEVEL_VERTICAL_SIZE
+		if self.height > self.max_height:
+			self.max_height = self.height
+		if self.height > self.max_height_last_step:
+			self.max_height_last_step = self.height
         
 	"""
 	Constructor para instanciar la aplicación.
@@ -41,6 +51,14 @@ class JKGame:
 			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
 	"""
 	def __init__(self, steps_per_episode, steps_per_seconds):
+
+		# Variables nuevas / modificadas
+
+		self.height = 0	# Altura total actual del King
+		self.max_height = 0 # Altura total máxima que ha alcanzado el King
+		self.max_height_last_step = 0 # Altura total máxima que alcanzó el King en el último paso
+
+		#
 
 		pygame.init()
 
@@ -84,10 +102,16 @@ class JKGame:
 
 		self.visited = {}
 
+		self._update_heights()
+
 		pygame.display.set_caption('Jump King At Home XD')
 
 	def reset(self):
 		'''Método para reiniciar el juego'''
+
+		self.height = 0	# Altura total actual del King
+		self.max_height = 0 # Altura total máxima que ha alcanzado el King
+		self.max_height_last_step = 0 # Altura total máxima que alcanzó el King en el último paso
 
 		self.king.reset()
 		self.levels.reset()
@@ -104,6 +128,8 @@ class JKGame:
 		self.visited = {}
 		self.visited[(self.king.levels.current_level, self.king.y)] = 1
 
+		self._update_heights()
+
 		return
 
 	def move_available(self):
@@ -119,10 +145,16 @@ class JKGame:
 		old_level = self.king.levels.current_level
 		old_y = self.king.y
 		#old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
+
+		self.max_height_last_step = self.height
+
 		while True:
+
 			if self.fps != FPS_UNLOCKED: # fps desbloqueados
 				self.clock.tick(self.fps)
+
 			self._check_events()
+
 			if not os.environ["pause"]:
 				if not self.move_available():
 					action = None
@@ -133,7 +165,8 @@ class JKGame:
 				self._update_guistuff()
 				self._update_audio()
 				pygame.display.update()
-
+			
+			self._update_heights()
 
 			if self.move_available():
 
