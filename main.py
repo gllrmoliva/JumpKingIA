@@ -60,7 +60,10 @@ if __name__ == "__main__":
 	""" t = Train.Train(ListAgent(), csv_savepath="test.csv")
 	t.run() """
 	state_dim = 4
-	action_dim = 5
+	action_dim = 4
 	agent = PPOAgent(state_dim, action_dim)
-	trainer = Train.Train(agent, csv_savepath="ppo_training.csv")
+	trainer = Train.Train(agent, agent_loadpath="model_ppo_episode.pth",
+						agent_savepath="model_ppo_episode.pth",
+						csv_savepath="ppo_training.csv")
 	trainer.run()
+	agent.plot()

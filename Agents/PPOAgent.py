@@ -244,15 +244,34 @@ class PPOAgent(Agent):
 
     def save(self, path):
         """
-        Guarda el modelo en un archivo.
+        Guarda el modelo, el optimizador, la política antigua y los parámetros clave.
         """
-        torch.save(self.policy.state_dict(), path)
+        checkpoint = {
+            'policy_state_dict': self.policy.state_dict(),
+            'policy_old_state_dict': self.policy_old.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'epsilon': self.epsilon,
+            'memory': self.memory,  # Aquí guardamos el estado de la memoria (si es necesario)
+            # Se pueden agregar otros parámetros si es necesario
+        }
+        torch.save(checkpoint, path)
+        logging.info(f"Modelo guardado en {path}")
+
 
     def load(self, path):
         """
-        Carga el modelo desde un archivo.
+        Carga el modelo, el optimizador, la política antigua y los parámetros clave desde un archivo.
         """
-        self.policy.load_state_dict(torch.load(path))
+        checkpoint = torch.load(path)
+        self.policy.load_state_dict(checkpoint['policy_state_dict'])
+        self.policy_old.load_state_dict(checkpoint['policy_old_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.epsilon = checkpoint['epsilon']
+        
+        # Si es necesario, restaurar la memoria (aunque se podría re-inicializar si es necesario)
+        self.memory = checkpoint['memory']  # Esto se puede ajustar según cómo se gestione la memoria
+        logging.info(f"Modelo cargado desde {path}")
+
 
     def plot(self):
             """

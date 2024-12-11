@@ -56,10 +56,17 @@ class State():
         state.jumpCount = game.king.jumpCount
         state.done = game.done
         state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
-        state.next_level_matrix = get_level_matrix(game, state.level + 0,
-                                                   matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
-                                                   matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE
-                                                   )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+        if state.level + 1 <= game.king.levels.max_level:
+            state.next_level_matrix = get_level_matrix(game, state.level + 1,
+                                                    matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                                    matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
+                                                    position_rounding=round, thickness_rounding=ceil,
+                                                    )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+        else:
+            state.next_level_matrix = np.ones((
+                                        NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                        NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
+                                        dtype=np.uint8)
         return state
 
 '''
@@ -115,6 +122,8 @@ class Train():
         number_of_episodes: Cuantos episodios a realizar
 		steps_per_seconds: Cantidad de 'pasos' de la simulación que se realizan en un segundo
 			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
+        agent_loadpath: Ruta donde cargar el entrenamiento del agente
+        agent_savepath: Ruta donde guardar el entrenamiento del agente
         csv_agentname: Nombre del agente en el .csv generado
         csv_savepath: Ruta donde guardar el .csv con las estadisticas del entrenamiento
     '''
@@ -123,12 +132,16 @@ class Train():
                  steps_per_episode=STEPS_PER_EPISODE,
                  number_of_episodes=NUMBER_OF_EPISODES,
                  steps_per_second=STEPS_PER_SECOND,
+                 agent_loadpath=None,
+                 agent_savepath=None,
                  csv_agentname="UNNAMED",
                  csv_savepath=None):
         
         self.agent : Agent = agent
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = number_of_episodes
+        self.agent_loadpath = agent_loadpath
+        self.agent_savepath = agent_savepath
         self.env : Environment = Environment(self.steps_per_episode, steps_per_second)
 
         self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
@@ -136,6 +149,8 @@ class Train():
     def run(self):
 
         self.episode = 1
+        
+        if self.agent_loadpath != None: self.agent.load(str(Path(self.agent_loadpath)))
 
         while self.episode <= self.numbers_of_episode:
 
@@ -164,7 +179,11 @@ class Train():
             
             self.agent.end_episode()
 
+            if self.agent_savepath != None: self.agent.save(str(Path(self.agent_savepath)))
+
+            print("Episodio {} Terminado\n".format(self.episode))
             self.episode += 1
+
         
         self.csv.end()
 
@@ -185,41 +204,38 @@ class CSV():
         
         self.file = open(self.path, mode='w', newline='')
         self.writer = csv.writer(self.file)
-        self.max_height = -1
-        self.current_episode = -1
 
         self.writer.writerow(['AGENT_NAME',
                               'EPISODE',
                               'STEP',
                               'DATE',
                               'TIME',
+                              'HEIGHT',
                               'MAX_HEIGHT',
+                              'MAX_HEIGHT_LAST_STEP',
                               'X',
                               'Y'])
     
     def update(self):
         if self.train.step % CSV_COOLDOWN == 0:
 
-            if self.current_episode != self.train.episode:
-                self.current_episode = self.train.episode
-                self.max_height = -1
-
-            current_height = self.train.state.y + self.train.state.level * LEVEL_VERTICAL_SIZE
-            self.max_height = max(self.max_height, current_height)
-
             now = datetime.now()
 
             date = now.strftime("%Y-%m-%d")
             time = now.strftime("%H:%M:%S")
 
-            self.writer.writerow([self.agentname,
-                                  self.train.episode,
-                                  self.train.step,
-                                  date,
-                                  time,
-                                  self.max_height,
-                                  self.train.state.x,
-                                  self.train.state.y])
+            row = [self.agentname,
+                   self.train.episode,
+                   self.train.step,
+                   date,
+                   time,
+                   self.train.state.height,
+                   self.train.state.max_height,
+                   self.train.state.max_height_last_step,
+                   self.train.state.x,
+                   self.train.state.y]
+
+            self.writer.writerow(row)
 
     def end(self):
         self.file.close()
