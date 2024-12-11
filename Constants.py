@@ -8,8 +8,8 @@
 '''
     Parametros de depuración y ejecución
 '''
-NO_INTERFACE = False # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
-CSV_COOLDOWN = 10 # Cuantos pasos deben pasar para que volver a escribir en un .csv
+NO_INTERFACE = True # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
+CSV_COOLDOWN = 100 # Cuantos pasos deben pasar para que volver a escribir en un .csv
 
 DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
@@ -17,9 +17,9 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
 '''
     Valores por defecto de los parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 10000
-NUMBER_OF_EPISODES = 1
-STEPS_PER_SECOND = 60
+STEPS_PER_EPISODE = 1000
+NUMBER_OF_EPISODES = 1000
+STEPS_PER_SECOND = -1
 
 '''
     Constantes del modelo de entrenamiento (No modificable)
