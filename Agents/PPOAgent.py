@@ -13,15 +13,15 @@ class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim):
         super(ActorCritic, self).__init__()
         self.actor = nn.Sequential(
-            nn.Linear(state_dim, 128),
+            nn.Linear(state_dim, 256),
             nn.ReLU(),
-            nn.Linear(128, action_dim),
+            nn.Linear(256, action_dim),
             nn.Softmax(dim=-1)
         )
         self.critic = nn.Sequential(
-            nn.Linear(state_dim, 128),
+            nn.Linear(state_dim, 256),
             nn.ReLU(),
-            nn.Linear(128, 1)
+            nn.Linear(256, 1)
         )
 
     def forward(self, state):
@@ -47,12 +47,13 @@ class Memory:
 
 
 class PPOAgent(Agent):
-    def __init__(self, state_dim, action_dim, lr=3e-4, gamma=0.99, Lambda=0.95, eps_clip=0.2, K_epochs=4):
+    def __init__(self, state_dim, action_dim, lr=3e-4, gamma=0.99, Lambda=0.95, eps_clip=0.2, K_epochs=4, epsilon=0.1):
         super().__init__()
         self.gamma = gamma
         self.Lambda = Lambda
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
+        self.epsilon = epsilon
 
         self.policy = ActorCritic(state_dim, action_dim)
         self.policy_old = ActorCritic(state_dim, action_dim)
@@ -75,7 +76,11 @@ class PPOAgent(Agent):
         self.memory.clear_memory()
         self.current_episode_rewards = 0
         self.episode_steps = 0
-        logging.info(f"Inicio del episodio {len(self.total_rewards) + 1}")
+
+        # Reducir epsilon gradualmente para favorecer explotación
+        self.epsilon = max(self.epsilon * 0.995, 0.05)
+        logging.info(f"Inicio del episodio {len(self.total_rewards) + 1} - Epsilon: {self.epsilon:.4f}")
+
 
     def select_action(self, state: State):
         """
@@ -84,7 +89,13 @@ class PPOAgent(Agent):
         state_tensor = torch.FloatTensor([state.level, state.x, state.y, state.jumpCount]).unsqueeze(0)
         with torch.no_grad():
             action_probs, _ = self.policy_old(state_tensor)
-        action = np.random.choice(len(action_probs[0]), p=action_probs[0].numpy())
+        
+        if np.random.rand() < self.epsilon:
+            # Exploración: selecciona una acción aleatoria
+            action = np.random.choice(len(action_probs[0]))
+        else:
+            # Explotación: selecciona la mejor acción conocida
+            action = np.random.choice(len(action_probs[0]), p=action_probs[0].numpy())
 
         # Almacenar en memoria
         self.memory.states.append(state_tensor)
@@ -107,7 +118,7 @@ class PPOAgent(Agent):
         self.episode_steps += 1
 
         # Mostrar progreso cada 10 pasos
-        if self.episode_steps % 10 == 0:
+        if self.episode_steps % 25 == 0:
             logging.info(f"Progreso: Episodio {len(self.total_rewards) + 1}, Pasos: {self.episode_steps}, Recompensa Acumulada: {self.current_episode_rewards:.2f}")
 
         # Si el episodio terminó, realiza la actualización del modelo
@@ -127,8 +138,18 @@ class PPOAgent(Agent):
         Calcula la recompensa basada en el cambio de estado.
         """
         reward = (next_state.max_height - state.max_height) * 10
+
+        # Penalizar comportamiento repetitivo
+        if state.level == next_state.level and state.x == next_state.x:
+            reward -= 3  # Penalización por falta de progreso
+
+        # Recompensa adicional por terminar con éxito
         if next_state.done:
-            reward += 100 if next_state.max_height > state.max_height else -100
+            reward += 100 if next_state.max_height > state.max_height else -50
+
+        # Incentivar exploración
+        reward += np.random.uniform(-1, 1) * 0.1
+
         return reward
 
     def update(self):
@@ -144,7 +165,7 @@ class PPOAgent(Agent):
         if len(self.memory.logprobs) > 0 and all(logprob.dim() > 0 for logprob in self.memory.logprobs):
             old_logprobs = torch.cat(self.memory.logprobs)
         else:
-            old_logprobs = torch.zeros(len(self.memory.actions), dtype=torch.float32)  # Ajusta el dtype según sea necesario
+            old_logprobs = torch.zeros(len(self.memory.actions), dtype=torch.float32)
 
         # Actualizar K_epochs veces
         for _ in range(self.K_epochs):
@@ -185,16 +206,24 @@ class PPOAgent(Agent):
             rewards.insert(0, discounted_reward)
 
         rewards = torch.tensor(rewards, dtype=torch.float32)
-        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-8)
+
+        # Escalado de recompensas
+        if rewards.std() > 0:
+            rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-8)
 
         # Calcular ventajas
         old_states = torch.cat(self.memory.states)
         _, state_values = self.policy(old_states)
         state_values = state_values.squeeze()
+
         advantages = rewards - state_values.detach()
-        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
+        # Normalizar ventajas
+        if advantages.std() > 0:
+            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
         return rewards, advantages
+
 
     def save(self, path):
         """
