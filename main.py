@@ -6,6 +6,7 @@ import random
 import time
 from pathlib import Path
 
+from Agents.PPOAgent import PPOAgent
 from DDQN import DDQN
 
 import Train
@@ -54,6 +55,12 @@ if __name__ == "__main__":
 	#Game.running()
 
 	#train()
+	torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-	t = Train.Train(ListAgent(), csv_savepath="test.csv")
-	t.run()
+	""" t = Train.Train(ListAgent(), csv_savepath="test.csv")
+	t.run() """
+	state_dim = 4
+	action_dim = 4
+	agent = PPOAgent(state_dim, action_dim)
+	trainer = Train.Train(agent, csv_savepath="ppo_training.csv")
+	trainer.run()

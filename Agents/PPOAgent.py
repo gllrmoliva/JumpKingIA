@@ -62,6 +62,28 @@ class PPOAgent(Agent):
     def end_episode(self):
         pass
 
+    def compute_reward(self, state, next_state):
+        # Ejemplo de lógica para calcular la recompensa
+        reward = 0
+
+        # Recompensa por avanzar a un nuevo nivel
+        if next_state.level > state.level:
+            reward += 100
+
+        # Penalización por caer
+        if next_state.y > state.y:
+            reward -= 10
+
+        # Recompensa por saltar
+        if next_state.jumpCount > state.jumpCount:
+            reward += 1
+
+        # Penalización si el juego ha terminado
+        if next_state.done:
+            reward -= 50
+
+        return reward
+
     def load(self, path):
         self.policy.load_state_dict(torch.load(path))
 
@@ -112,7 +134,3 @@ class Memory:
         del self.logprobs[:]
         del self.rewards[:]
         del self.is_terminals[:]
-
-    def compute_reward(self, state, next_state):
-        # Implementa la lógica para calcular la recompensa
-        pass
