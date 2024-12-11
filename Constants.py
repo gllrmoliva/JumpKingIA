@@ -17,9 +17,10 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
 '''
     Valores por defecto de los parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 1000
-NUMBER_OF_EPISODES = 1000
-STEPS_PER_SECOND = -1
+STEPS_PER_EPISODE = 1000  # Número de pasos máximo a simular en un episodio
+NUMBER_OF_EPISODES = 1000 # Número de episodios a simular
+STEPS_PER_SECOND = -1     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+                          # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
 
 '''
     Constantes del modelo de entrenamiento (No modificable)
