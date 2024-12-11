@@ -181,7 +181,9 @@ class Train():
 
             if self.agent_savepath != None: self.agent.save(str(Path(self.agent_savepath)))
 
+            print("Episodio {} Terminado\n".format(self.episode))
             self.episode += 1
+
         
         self.csv.end()
 

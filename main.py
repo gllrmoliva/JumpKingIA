@@ -57,9 +57,14 @@ if __name__ == "__main__":
 	#Game.running()
 
 	#train()
+	path = "model_ddqn_episode"
 
 	t = Train.Train(DDQNAgent(	state_dim=LEVEL_MATRIX_HORIZONTAL_SIZE* LEVEL_MATRIX_VERTICAL_SIZE + 5,
 						    	action_dim=len(ACTION_SPACE),
-								is_training=True), csv_savepath="test.csv")
+								is_training=True),
+							csv_savepath= path + ".csv",
+							agent_savepath= path + ".pth",
+							agent_loadpath= path + ".pth"
+							)
 	#t = Train.Train(RandomAgent(), csv_savepath="test.csv")
 	t.run()

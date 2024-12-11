@@ -48,7 +48,7 @@ class DDQNAgent(Agent):
         self.epsilon = 1
         self.epsilon_decay = 0.9985 
         self.epsilon_min = 0.05
-        self.replay_memory_size = 10000
+        self.replay_memory_size = 50000
         self.batch_size = 128 
         self.episode_reward = 0
         self.step_count = 0
@@ -106,7 +106,6 @@ class DDQNAgent(Agent):
 
     # Entrena al modelo sabiendo que acción tomó en un estado, y a que otro estado llevó
     # Acá podria por ejemplo: Calcular recompensa, actualizar recompensa acumulada, etc.
-    # FIXME: Quizas tiene más sentido llamar a esto run()
     def train(self, state: 'State', action: int, next_state: 'State'):
         reward = self.calculate_reward(state, action, next_state)
         self.episode_reward += reward
@@ -175,7 +174,6 @@ class DDQNAgent(Agent):
     def end_episode(self):
         # Al terminar episodio 
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-        print("Current epsilon: {}".format(self.epsilon))
 
         # Si suficiente experiencia a sido recolectada
         if len(self.memory) > self.batch_size:
@@ -188,7 +186,7 @@ class DDQNAgent(Agent):
                 self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
                 self.step_count = 0
 
-        print("End Episode, Acumulative reward: {}".format(self.episode_reward))
+        print("End Episode, Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
     # Para cargar datos de entrenamientos previos
     def load(self, path):
@@ -227,5 +225,8 @@ class DDQNAgent(Agent):
         
         # Concatenar los valores escalares y la matriz aplanada
         full_state_tensor = torch.cat((scalar_values, level_matrix_tensor)).to(self.device)
+
+        # FIXME: Vamos a correr pruebas con el nivel en el que estamos
+        #full_state_tensor = scalar_values.to(self.device)
         
         return full_state_tensor
