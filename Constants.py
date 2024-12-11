@@ -11,7 +11,7 @@
 NO_INTERFACE = False # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
 CSV_COOLDOWN = 10 # Cuantos pasos deben pasar para que volver a escribir en un .csv
 
-DEBUG_LEVEL_MATRIX = True # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
+DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
 
 '''

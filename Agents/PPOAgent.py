@@ -41,8 +41,7 @@ class PPOAgent(Agent):
     def start_episode(self):
         self.memory.clear_memory()
 
-    def select_action(self, coded_state: bytes):
-        state = State.decode(coded_state)
+    def select_action(self, state: State):
         state = torch.FloatTensor(state).unsqueeze(0)
         with torch.no_grad():
             action_probs, _ = self.policy_old(state)
@@ -52,9 +51,7 @@ class PPOAgent(Agent):
         self.memory.logprobs.append(torch.log(action_probs[0][action]))
         return action
 
-    def train(self, coded_state: bytes, action: int, coded_next_state: bytes):
-        state = State.decode(coded_state)
-        next_state = State.decode(coded_next_state)
+    def train(self, state: State, action: int, next_state: State):
         reward = self.compute_reward(state, next_state)
         self.memory.rewards.append(reward)
         self.memory.is_terminals.append(next_state.done)
