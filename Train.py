@@ -56,10 +56,17 @@ class State():
         state.jumpCount = game.king.jumpCount
         state.done = game.done
         state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
-        state.next_level_matrix = get_level_matrix(game, state.level + 0,
-                                                   matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
-                                                   matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE
-                                                   )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+        if state.level + 1 <= game.king.levels.max_level:
+            state.next_level_matrix = get_level_matrix(game, state.level + 1,
+                                                    matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                                    matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
+                                                    position_rounding=round, thickness_rounding=ceil,
+                                                    )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+        else:
+            state.next_level_matrix = np.ones((
+                                        NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                        NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
+                                        dtype=np.uint8)
         return state
 
 '''
@@ -185,41 +192,38 @@ class CSV():
         
         self.file = open(self.path, mode='w', newline='')
         self.writer = csv.writer(self.file)
-        self.max_height = -1
-        self.current_episode = -1
 
         self.writer.writerow(['AGENT_NAME',
                               'EPISODE',
                               'STEP',
                               'DATE',
                               'TIME',
+                              'HEIGHT',
                               'MAX_HEIGHT',
+                              'MAX_HEIGHT_LAST_STEP'
                               'X',
                               'Y'])
     
     def update(self):
         if self.train.step % CSV_COOLDOWN == 0:
 
-            if self.current_episode != self.train.episode:
-                self.current_episode = self.train.episode
-                self.max_height = -1
-
-            current_height = self.train.state.y + self.train.state.level * LEVEL_VERTICAL_SIZE
-            self.max_height = max(self.max_height, current_height)
-
             now = datetime.now()
 
             date = now.strftime("%Y-%m-%d")
             time = now.strftime("%H:%M:%S")
 
-            self.writer.writerow([self.agentname,
-                                  self.train.episode,
-                                  self.train.step,
-                                  date,
-                                  time,
-                                  self.max_height,
-                                  self.train.state.x,
-                                  self.train.state.y])
+            row = [self.agentname,
+                   self.train.episode,
+                   self.train.step,
+                   date,
+                   time,
+                   self.train.state.height,
+                   self.train.state.max_height,
+                   self.train.state.max_height_last_step,
+                   self.train.state.x,
+                   self.train.state.y]
+
+            self.writer.writerow(row)
 
     def end(self):
         self.file.close()
