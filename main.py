@@ -12,6 +12,7 @@ import Train
 from Agents.RandomAgent import RandomAgent
 from Agents.LeftRightAgent import LeftRightAgent
 from Agents.ListAgent import ListAgent
+from Agents.LoadSaveAgent import LoadSaveAgent
 from JumpKing import JKGame
 
 '''
