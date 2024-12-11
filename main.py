@@ -12,7 +12,9 @@ import Train
 from Agents.RandomAgent import RandomAgent
 from Agents.LeftRightAgent import LeftRightAgent
 from Agents.ListAgent import ListAgent
+from Agents.DDQNAgent import DDQNAgent
 from JumpKing import JKGame
+from Constants import *
 
 '''
 ¡Obsoleto!
@@ -55,5 +57,8 @@ if __name__ == "__main__":
 
 	#train()
 
-	t = Train.Train(ListAgent(), csv_savepath="test.csv")
+	t = Train.Train(DDQNAgent(	state_dim=LEVEL_MATRIX_HORIZONTAL_SIZE* LEVEL_MATRIX_VERTICAL_SIZE + 5,
+						    	action_dim=len(ACTION_SPACE),
+								is_training=True), csv_savepath="test.csv")
+	#t = Train.Train(RandomAgent(), csv_savepath="test.csv")
 	t.run()
