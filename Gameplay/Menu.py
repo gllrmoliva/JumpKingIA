@@ -12,6 +12,8 @@ import pickle
 from Gameplay.spritesheet import SpriteSheet
 from pathlib import Path
 
+from Constants import NO_INTERFACE
+
 class Menus:
 
 	def __init__(self, screen, levels, king):
@@ -184,7 +186,8 @@ class Menus:
 
 			menus["Start_Menu"].buttons.insert(0, self.buttons["Continue_Game"])
 
-		menus["Press_Start"] = Blinker_Menu(None, (self.screen.get_width() - self.buttons["Press_Start"].text.get_width()) / 2, 5 * self.screen.get_height() / 7, self.buttons["Press_Start"].text.get_width(), self.buttons["Press_Start"].text.get_height(), self.images, self.audio, self.buttons["Press_Start"])
+		if not NO_INTERFACE:
+			menus["Press_Start"] = Blinker_Menu(None, (self.screen.get_width() - self.buttons["Press_Start"].text.get_width()) / 2, 5 * self.screen.get_height() / 7, self.buttons["Press_Start"].text.get_width(), self.buttons["Press_Start"].text.get_height(), self.images, self.audio, self.buttons["Press_Start"])
 
 		return menus
 

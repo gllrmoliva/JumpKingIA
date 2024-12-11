@@ -25,11 +25,23 @@ from Gameplay.Menu import Menus
 from Gameplay.Start import Start
 from pathlib import Path
 
+from Constants import LEVEL_VERTICAL_SIZE, NO_INTERFACE, DEBUG_OLD_COORDINATE_SYSTEM
+
 # Keyword
 FPS_UNLOCKED = -1
 
 class JKGame:
 	""" Overall class to manga game aspects """
+
+	"""
+	Función auxiliar para actualizar variables relacionadas a la altura
+	"""
+	def _update_heights(self):
+		self.height = (LEVEL_VERTICAL_SIZE - self.king.rect_y) + self.king.levels.current_level * LEVEL_VERTICAL_SIZE
+		if self.height > self.max_height:
+			self.max_height = self.height
+		if self.height > self.max_height_last_step:
+			self.max_height_last_step = self.height
         
 	"""
 	Constructor para instanciar la aplicación.
@@ -39,6 +51,14 @@ class JKGame:
 			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
 	"""
 	def __init__(self, steps_per_episode, steps_per_seconds):
+
+		# Variables nuevas / modificadas
+
+		self.height = 0	# Altura total actual del King
+		self.max_height = 0 # Altura total máxima que ha alcanzado el King
+		self.max_height_last_step = 0 # Altura total máxima que alcanzó el King en el último paso
+
+		#
 
 		pygame.init()
 
@@ -52,17 +72,20 @@ class JKGame:
 			self.fps = FPS_UNLOCKED
 		else:
 			raise ValueError("Invalid value of steps_per_seconds parameter")
- 
-		self.bg_color = (0, 0, 0)
-
+		
 		self.screen = pygame.display.set_mode((int(os.environ.get("screen_width")) * int(os.environ.get("window_scale")), int(os.environ.get("screen_height")) * int(os.environ.get("window_scale"))), pygame.HWSURFACE|pygame.DOUBLEBUF)#|pygame.SRCALPHA)
+		
+		if not NO_INTERFACE:
+ 
+			self.bg_color = (0, 0, 0)
+			self.game_screen = pygame.Surface((int(os.environ.get("screen_width")), int(os.environ.get("screen_height"))), pygame.HWSURFACE|pygame.DOUBLEBUF)#|pygame.SRCALPHA)
+			self.game_screen_x = 0
+			pygame.display.set_icon(pygame.image.load(str(Path("Assets/images/sheets/JumpKingIcon.ico"))))
+		
+		else:
 
-		self.game_screen = pygame.Surface((int(os.environ.get("screen_width")), int(os.environ.get("screen_height"))), pygame.HWSURFACE|pygame.DOUBLEBUF)#|pygame.SRCALPHA)
-
-		self.game_screen_x = 0
-
-		pygame.display.set_icon(pygame.image.load(str(Path("Assets/images/sheets/JumpKingIcon.ico"))))
-
+			self.game_screen = None
+		
 		self.levels = Levels(self.game_screen)
 
 		self.king = King(self.game_screen, self.levels)
@@ -75,13 +98,20 @@ class JKGame:
 
 		self.step_counter = 0
 		self.max_step = steps_per_episode
+		self.done = False
 
 		self.visited = {}
+
+		self._update_heights()
 
 		pygame.display.set_caption('Jump King At Home XD')
 
 	def reset(self):
 		'''Método para reiniciar el juego'''
+
+		self.height = 0	# Altura total actual del King
+		self.max_height = 0 # Altura total máxima que ha alcanzado el King
+		self.max_height_last_step = 0 # Altura total máxima que alcanzó el King en el último paso
 
 		self.king.reset()
 		self.levels.reset()
@@ -93,13 +123,14 @@ class JKGame:
 		os.environ["session"] = "0"
 
 		self.step_counter = 0
-		done = False
-		state = [self.king.levels.current_level, self.king.x, self.king.y, self.king.jumpCount]
+		self.done = False
 
 		self.visited = {}
 		self.visited[(self.king.levels.current_level, self.king.y)] = 1
 
-		return done, state
+		self._update_heights()
+
+		return
 
 	def move_available(self):
 		'''Metodo para conseguir movimientos disponibles'''
@@ -114,27 +145,37 @@ class JKGame:
 		old_level = self.king.levels.current_level
 		old_y = self.king.y
 		#old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
+
+		self.max_height_last_step = self.height
+
 		while True:
+
 			if self.fps != FPS_UNLOCKED: # fps desbloqueados
 				self.clock.tick(self.fps)
+
 			self._check_events()
+
 			if not os.environ["pause"]:
 				if not self.move_available():
 					action = None
 				self._update_gamestuff(action=action)
 
-			self._update_gamescreen()
-			self._update_guistuff()
-			self._update_audio()
-			pygame.display.update()
-
+			if not NO_INTERFACE:
+				self._update_gamescreen()
+				self._update_guistuff()
+				self._update_audio()
+				pygame.display.update()
+			
+			self._update_heights()
 
 			if self.move_available():
+
 				self.step_counter += 1
-				state = [self.king.levels.current_level, self.king.x, self.king.y, self.king.jumpCount]
+
 				##################################################################################################
 				# Define the reward from environment                                                             #
 				##################################################################################################
+				'''
 				if self.king.levels.current_level > old_level or (self.king.levels.current_level == old_level and self.king.y < old_y):
 					reward = 0
 				else:
@@ -143,10 +184,12 @@ class JKGame:
 						self.visited[(self.king.levels.current_level, self.king.y)] = self.visited[(old_level, old_y)] + 1
 
 					reward = -self.visited[(self.king.levels.current_level, self.king.y)]
+				'''
 				####################################################################################################
 
-				done = True if self.step_counter > self.max_step else False
-				return state, reward, done
+				self.done = True if self.step_counter > self.max_step else False
+				
+				return
 
 	def running(self):
 		"""
@@ -163,10 +206,11 @@ class JKGame:
 			if not os.environ["pause"]:
 				self._update_gamestuff()
 
-			self._update_gamescreen()
-			self._update_guistuff()
-			self._update_audio()
-			pygame.display.update()
+			if not NO_INTERFACE:
+				self._update_gamescreen()
+				self._update_guistuff()
+				self._update_audio()
+				pygame.display.update()
 
 	def _check_events(self):
 		'''Metodo para verificar eventos'''

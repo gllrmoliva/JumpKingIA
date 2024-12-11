@@ -17,8 +17,7 @@ class LeftRightAgent(Agent):
     def start_episode(self):
         self.direction = 'right'
 
-    def select_action(self, coded_state):
-        state = State.decode(coded_state)
+    def select_action(self, state):
 
         # transformar coordenada en celda de la matriz de colisiones
         x, y, w, h = area_to_matrix_area(state.x, state.y + VERTICAL_DETECTION_PHASE, DETECTION_WIDTH, DETECTION_HEIGHT)

@@ -8,6 +8,8 @@ import pygame
 import math
 import os
 
+from Constants import NO_INTERFACE
+
 class Wind:
 
 	def __init__(self, screen):
@@ -16,7 +18,13 @@ class Wind:
 
 		self.wind_var = 0
 
-		self.x, self.y, self.width, self.height = 0, 0, self.screen.get_width(), self.screen.get_height()
+		if not NO_INTERFACE:
+
+			self.x, self.y, self.width, self.height = 0, 0, self.screen.get_width(), self.screen.get_height()
+		
+		else:
+
+			self.x, self.y, self.width, self.height = 0, 0, int(os.environ.get("screen_width")), int(os.environ.get("screen_height"))
 
 	@property
 	def rect(self):

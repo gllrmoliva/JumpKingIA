@@ -6,15 +6,19 @@
 
 
 '''
-    Parametros de depuración
+    Parametros de depuración y ejecución
 '''
+NO_INTERFACE = False # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
+CSV_COOLDOWN = 10 # Cuantos pasos deben pasar para que volver a escribir en un .csv
+
 DEBUG_LEVEL_MATRIX = True # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
+DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
 
 '''
     Valores por defecto de los parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 1000
-NUMBER_OF_EPISODES = 1000000
+STEPS_PER_EPISODE = 10000
+NUMBER_OF_EPISODES = 1
 STEPS_PER_SECOND = 60
 
 '''
@@ -36,6 +40,8 @@ ACTION_SPACE : dict[int, str] = {
 '''
 LEVEL_MATRIX_HORIZONTAL_SIZE = 48
 LEVEL_MATRIX_VERTICAL_SIZE = 36
+NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE = 24
+NEXT_LEVEL_MATRIX_VERTICAL_SIZE = 9
 
 '''
     Constantes del tamaño de los niveles (No modificable)

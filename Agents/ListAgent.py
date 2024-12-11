@@ -40,7 +40,7 @@ class ListAgent(Agent):
             for i in range(repeat):
                 self.actions.append(action)
     
-    def select_action(self, coded_state):
+    def select_action(self, state):
 
         if len(self.actions) != 0:
             return self.actions.pop()

@@ -1,7 +1,10 @@
 from JumpKing import JKGame
 import struct
+import csv
+from pathlib import Path
 from Constants import *
 from Matrix import *
+from datetime import datetime
 
 '''
 Este archivo tiene la función de generalizar lo que es entrenar un agente,
@@ -12,8 +15,6 @@ por lo tanto acá se definen clases extras como State, Environment que añaden e
 '''
 
 
-
-
 """
 La representación de un estado en el repositorio original es bastante limitada
 Está clase modela un estado y 
@@ -21,82 +22,44 @@ Está clase modela un estado y
 class State():
 
     # Attributes
-    level : int = None
-    x : int = None
-    y : int = None
-    jumpCount : int = None
-    done : bool = None
-    level_matrix : npt.NDArray[np.uint64] = None
+    level : int = None                                  # Número del nivel actual
+    x : int = None                                      # Coordenada x del King. Aumenta de izquierda a derecha
+    y : int = None                                      # Coordenada y del King. ¡Aumenta de arriba hacia abajo!
+    height : int = None                                 # Altura total del King, incluyendo niveles anteriores. ¡Aumenta de abajo hacia arriba!
+    max_height : int = None                             # Altura total máxima alcanzada en el episodio
+    max_height_last_step : int = None                   # Altura total máxima alcanzada durante el último paso de juego
+    jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
+    done : bool = None                                  # Acabo el episodio
+    level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
+    next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
 
     '''
     Busca los valores que describen el estado y los almacena en los atributos
     Recibe como parametro:
-        env: instancia de Environment. Esto es porque es la unica forma de acceder a variables del repositorio original
-        built_in_state : La representación de un estado en el repositorio original
-                         Conformado por: Nivel actual, x, y, contador del sato
-        done: Verdadero si se llegó al final del episodio
+        game: instancia de JKGame. Esto es porque es la forma de acceder a variables del repositorio original
     '''                  
     @staticmethod
-    def get_state_from_built_in_state(env, built_in_state, done) -> 'State':
+    def get_state_from_game(game : JKGame) -> 'State':
         state = State()
 
-        state.level = built_in_state[0]
-        state.x = built_in_state[1]
-        state.y = built_in_state[2]
-        state.jumpCount = built_in_state[3]
-        state.done = done
-        state.level_matrix = get_level_matrix(env, state.level)
-
-        return state
-    
-    '''
-    Codifica un estado como una serie de bytes (Tengo entendido que es obligatorio para meterlo a una red neuronal)
-    El tamaño de la codificación es fijo.
-    ¡Agregar/eliminar/modificar un atributo de la clase implica tener que cambiar este metodo!
-    '''
-    @staticmethod
-    def encode(state : 'State') -> bytes:
-        # Pack integers and boolean
-        packed_data = struct.pack(
-            '4i?',  # 4 integers and 1 boolean
-            state.level, state.x, state.y, state.jumpCount, state.done
-        )
+        state.level = game.king.levels.current_level
+        if DEBUG_OLD_COORDINATE_SYSTEM:
+            state.x = game.king.x + 5 # numero magico
+            state.y = game.king.y + 9 # numero magico
+        else:
+            state.x = round(game.king.rect_x)
+            state.y = round(game.king.rect_y)
         
-        # Flatten the 2D numpy matrix (uint8) and pack it as bytes
-        flattened_matrix = state.level_matrix.flatten()
-        packed_matrix = struct.pack(f'{flattened_matrix.size}B', *flattened_matrix)  # 'B' for uint8 (1 byte per element)
-        
-        # Combine everything into one packed binary string
-        final_packed_data = packed_data + packed_matrix
-        return final_packed_data
-    
-    '''
-    Decodifica la codificación de encode(), devolviendo una instancia de State cuyas variables corresponden a los valores codificados
-    ¡Agregar/eliminar/modificar un atributo de la clase implica tener que cambiar este metodo!
-    '''
-    @staticmethod
-    def decode(coded_state : bytes) -> 'State':
-        # Unpack the first part (4 integers and 1 boolean)
-        unpacked_data = struct.unpack('4i?', coded_state[:17])  # 4 integers (4*4 bytes) + 1 boolean (1 byte)
-        level, x, y, jumpCount, done = unpacked_data
-        
-        # Unpack the 2D matrix (after the header part)
-        matrix_size = LEVEL_MATRIX_VERTICAL_SIZE * LEVEL_MATRIX_HORIZONTAL_SIZE
-        matrix_data = coded_state[17:]
-        unpacked_matrix = struct.unpack(f'{matrix_size}B', matrix_data)  # 'B' for uint8 (1 byte per element)
-        
-        # Convert the unpacked matrix into a 2D numpy array
-        level_matrix = np.array(unpacked_matrix, dtype=np.uint8).reshape((LEVEL_MATRIX_VERTICAL_SIZE, LEVEL_MATRIX_HORIZONTAL_SIZE))
-
-        state = State()
-        
-        state.level = level
-        state.x = x
-        state.y = y
-        state.jumpCount = jumpCount
-        state.done = done
-        state.level_matrix = level_matrix
-        
+        state.height = game.height
+        state.max_height = game.max_height
+        state.max_height_last_step = game.max_height_last_step
+        state.jumpCount = game.king.jumpCount
+        state.done = game.done
+        state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
+        state.next_level_matrix = get_level_matrix(game, state.level + 0,
+                                                   matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                                   matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE
+                                                   )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
         return state
 
 '''
@@ -110,11 +73,11 @@ class Agent():
     def start_episode(self):
         pass
     # Devuelve que acción tomar segun un estado de juego
-    def select_action(self, coded_state: bytes):
+    def select_action(self, state: State):
         pass
     # Entrena al modelo sabiendo que acción tomó en un estado, y a que otro estado llevó
     # Acá podria por ejemplo: Calcular recompensa, actualizar recompensa acumulada, etc.
-    def train(self, coded_state: bytes, action: int, coded_next_state: bytes):
+    def train(self, state: State, action: int, next_state: State):
         pass
     # Se llama cuando acaba el episodio.
     def end_episode(self):
@@ -134,12 +97,12 @@ class Environment():
         self.game = JKGame(steps_per_episode=steps_per_episode, steps_per_seconds=steps_per_second)
     
     def reset(self):
-        done, state = self.game.reset()
-        return State.get_state_from_built_in_state(self, state, done)
+        self.game.reset()
+        return State.get_state_from_game(self.game)
 
     def step(self, action):
-        next_state , reward, done = self.game.step(action)
-        return State.get_state_from_built_in_state(self, next_state, done)
+        self.game.step(action)
+        return State.get_state_from_game(self.game)
 
 '''
 Para iniciar el juego con función de entrenar un agente
@@ -152,46 +115,114 @@ class Train():
         number_of_episodes: Cuantos episodios a realizar
 		steps_per_seconds: Cantidad de 'pasos' de la simulación que se realizan en un segundo
 			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
+        csv_agentname: Nombre del agente en el .csv generado
+        csv_savepath: Ruta donde guardar el .csv con las estadisticas del entrenamiento
     '''
     def __init__(self,
                  agent : Agent,
                  steps_per_episode=STEPS_PER_EPISODE,
                  number_of_episodes=NUMBER_OF_EPISODES,
-                 steps_per_second=STEPS_PER_SECOND):
+                 steps_per_second=STEPS_PER_SECOND,
+                 csv_agentname="UNNAMED",
+                 csv_savepath=None):
         
-        self.agent = agent
+        self.agent : Agent = agent
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = number_of_episodes
-        self.env = Environment(self.steps_per_episode, steps_per_second)
+        self.env : Environment = Environment(self.steps_per_episode, steps_per_second)
+
+        self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
 
     def run(self):
 
-        for i in range(self.numbers_of_episode):
+        self.episode = 1
+
+        while self.episode <= self.numbers_of_episode:
 
             self.agent.start_episode()
 
-            state = self.env.reset()
+            self.state = self.env.reset()
 
-            while not state.done:
+            self.step = 0
 
-                action = self.agent.select_action(State.encode(state))
+            while not self.state.done:
+
+                self.csv.update()
+
+                action = self.agent.select_action(self.state)
 
                 if action not in ACTION_SPACE.keys() : 
                     raise ValueError("Given action not in Action Space!")
 
                 next_state = self.env.step(action)
 
-                self.agent.train(State.encode(state), action, State.encode(next_state))
+                self.agent.train(self.state, action, next_state)
 
-                state = next_state
+                self.state = next_state
+
+                self.step += 1
             
             self.agent.end_episode()
+
+            self.episode += 1
+        
+        self.csv.end()
 
 '''
 TODO: Para iniciar el juego con función de evaluar un agente ya entrenado
 '''
 class Evaluate():
     pass
+
+'''
+Clase para separar la lógica de la generación de CSV
+'''
+class CSV():
+    def __init__(self, agentname, savepath, train : Train):
+        self.agentname = agentname
+        self.path = str(Path(savepath))
+        self.train = train
+        
+        self.file = open(self.path, mode='w', newline='')
+        self.writer = csv.writer(self.file)
+        self.max_height = -1
+        self.current_episode = -1
+
+        self.writer.writerow(['AGENT_NAME',
+                              'EPISODE',
+                              'STEP',
+                              'DATE',
+                              'TIME',
+                              'MAX_HEIGHT',
+                              'X',
+                              'Y'])
+    
+    def update(self):
+        if self.train.step % CSV_COOLDOWN == 0:
+
+            if self.current_episode != self.train.episode:
+                self.current_episode = self.train.episode
+                self.max_height = -1
+
+            current_height = self.train.state.y + self.train.state.level * LEVEL_VERTICAL_SIZE
+            self.max_height = max(self.max_height, current_height)
+
+            now = datetime.now()
+
+            date = now.strftime("%Y-%m-%d")
+            time = now.strftime("%H:%M:%S")
+
+            self.writer.writerow([self.agentname,
+                                  self.train.episode,
+                                  self.train.step,
+                                  date,
+                                  time,
+                                  self.max_height,
+                                  self.train.state.x,
+                                  self.train.state.y])
+
+    def end(self):
+        self.file.close()
 
     
 
