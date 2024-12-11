@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import logging
+from plot_training_results import MetricsPlotter
 from Train import Agent, State
 
 # Configuración del logger para seguimiento
@@ -65,6 +66,7 @@ class PPOAgent(Agent):
         self.memory = Memory()
 
         # Métricas de entrenamiento
+        self.plotter = MetricsPlotter()
         self.total_rewards = []  # Lista de recompensas acumuladas por episodio
         self.current_episode_rewards = 0  # Recompensa acumulada actual
         self.episode_steps = 0  # Número de pasos en el episodio actual
@@ -167,6 +169,10 @@ class PPOAgent(Agent):
         else:
             old_logprobs = torch.zeros(len(self.memory.actions), dtype=torch.float32)
 
+        total_loss = 0
+        total_entropy = 0
+        mean_gradients = 0
+
         # Actualizar K_epochs veces
         for _ in range(self.K_epochs):
             logprobs, state_values = self.policy(old_states)
@@ -184,11 +190,22 @@ class PPOAgent(Agent):
 
             # Total loss
             loss = loss_policy + 0.5 * loss_value - 0.01 * dist_entropy
+            total_loss += loss.item()
+            total_entropy += dist_entropy.item()
 
             # Optimización
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+            grad_sum = sum(param.grad.abs().mean().item() for param in self.policy.parameters() if param.grad is not None)
+            mean_gradients += grad_sum
+
+        self.plotter.store_metrics(len(self.total_rewards) + 1,
+                                self.current_episode_rewards,
+                                mean_gradients / self.K_epochs,
+                                total_loss / self.K_epochs,
+                                total_entropy / self.K_epochs)
 
         # Actualizar política antigua
         self.policy_old.load_state_dict(self.policy.state_dict())
@@ -236,3 +253,9 @@ class PPOAgent(Agent):
         Carga el modelo desde un archivo.
         """
         self.policy.load_state_dict(torch.load(path))
+
+    def plot(self):
+            """
+            Muestra las gráficas de las métricas de entrenamiento.
+            """
+            self.plotter.plot_all()
