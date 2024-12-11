@@ -62,7 +62,7 @@ class PPOAgent(Agent):
     def end_episode(self):
         pass
 
-    def compute_reward(self, state, next_state):
+    def compute_reward(self, state: State, next_state: State):
         # Ejemplo de lógica para calcular la recompensa
         reward = 0
 
