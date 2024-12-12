@@ -78,20 +78,24 @@ class State():
         return state
 
     '''
-    Normaliza cada atributo del estado, asignandole un valor entre 0 y 1
+    ATRIBUTOS NORMALIZADOS: Cuyo valor esta entre 0 y 1
     ¡Notar que en este proceso se transforman los valores a float!
     '''
-    def normalize(self):
-        if self._normalized:
-            raise ValueError("Trying to normalize State already normalized!")
-        self.level                  /= MAX_LEVEL
-        self.x                      /= LEVEL_HORIZONTAL_SIZE
-        self.y                      /= LEVEL_VERTICAL_SIZE
-        self.height                 /= GAME_MAX_HEIGHT
-        self.max_height             /= GAME_MAX_HEIGHT
-        self.max_height_last_step   /= GAME_MAX_HEIGHT
-        self.jumpCount              /= JUMPCOUNT_MAX
-        self._normalized = True
+    @property
+    def level_normalized(self): return self.level / MAX_LEVEL
+    @property
+    def x_normalized(self): return self.x / LEVEL_HORIZONTAL_SIZE
+    @property
+    def y_normalized(self): return self.y / LEVEL_VERTICAL_SIZE
+    @property
+    def height_normalized(self): return self.height / GAME_MAX_HEIGHT
+    @property
+    def max_height_normalized(self): return self.max_height / GAME_MAX_HEIGHT
+    @property
+    def max_height_last_step_normalized(self): return self.max_height_last_step / GAME_MAX_HEIGHT
+    @property
+    def jumpCount_normalized(self): return self.jumpCount / JUMPCOUNT_MAX
+    
 
 '''
 Interfaz que modela un agente.
