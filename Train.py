@@ -61,6 +61,7 @@ class State():
         state.max_height_last_step = env.game.max_height_last_step
         state.jumpCount = env.game.king.jumpCount
         state.done = env.done
+        state.win = env.win
         state.level_matrix = get_level_matrix(env.game, state.level, debug=True,
                                               position_rounding=round, thickness_rounding=ceil)
         if state.level + 1 <= MAX_LEVEL:
@@ -128,11 +129,13 @@ class Environment():
         self.steps_per_episode = steps_per_episode
         self.step_counter = 0
         self.done = False
+        self.win = False
     
     def reset(self):
         self.game.reset()
         self.step_counter = 0
         self.done = False
+        self.win = False
 
         return State.get_state_from_env(self)
 
@@ -156,7 +159,10 @@ class Environment():
 
         self.step_counter += 1
 
-        if self.step_counter >= self.steps_per_episode:
+        if self.game.king.levels.current_level == MAX_LEVEL:
+            self.done = True
+            self.win = True
+        elif self.step_counter >= self.steps_per_episode:
             self.done = True
         else:
             self.done = False
@@ -274,6 +280,7 @@ class CSV():
                               'STEP',
                               'DATE',
                               'TIME',
+                              'LEVEL',
                               'HEIGHT',
                               'MAX_HEIGHT',
                               'MAX_HEIGHT_LAST_STEP',
@@ -293,6 +300,7 @@ class CSV():
                    self.train.step,
                    date,
                    time,
+                   self.train.state.level,
                    self.train.state.height,
                    self.train.state.max_height,
                    self.train.state.max_height_last_step,
