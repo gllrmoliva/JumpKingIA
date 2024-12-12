@@ -4,6 +4,10 @@ Alterna entre ir hacia la derecha o izquierda conforme detecta algo al frente
 Lo importante es que muestra un ejemplo de recibir el estado codificado, decodificarlo, y hacer algo con esa información.
 '''
 
+##---------------------------------------------------------####
+##        OBSOLETO: LO VOY A CORREGIR DESPUES               ###
+##---------------------------------------------------------####
+
 from Train import Agent, State
 from Matrix import area_to_matrix_area
 

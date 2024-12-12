@@ -8,23 +8,25 @@
 '''
     Parametros de depuración y ejecución
 '''
-NO_INTERFACE = True# Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
-CSV_COOLDOWN = 500 # Cuantos pasos deben pasar para que volver a escribir en un .csv
+NO_INTERFACE = False # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
+CSV_COOLDOWN = 10 # Cuantos pasos deben pasar para que volver a escribir en un .csv
 
 DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
 
 '''
-    Valores por defecto de los parametros de entrenamiento (Modificable)
+    Parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 3001  # Número de pasos máximo a simular en un episodio
+STEPS_PER_EPISODE = 30010  # Número de pasos máximo a simular en un episodio
 NUMBER_OF_EPISODES = 6000 # Número de episodios a simular
-STEPS_PER_SECOND = -1     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+STEPS_PER_SECOND = 60     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
                           # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
 
-'''
-    Constantes del modelo de entrenamiento (No modificable)
-'''
+ACTION_SPACE_SIZE = 2 + 5*2     # Número de acciones del espacio de acciones
+WALKING_LENGTH = 6              # Por cuantos pasos camina, si es que escogió esa acción
+INCLUDE_VERTICAL_SPACE = False  # ¿Incluir el salto vertical?
+
+'''     ¡¡ OBSOLETO !!
 # Parametros (o constante?) del espacio de acciones
 # ¡No se esta usando en ningun lado! tampoco creo que sea necesario. Sirve más de documentación que otra cosa
 ACTION_SPACE : dict[int, str] = {
@@ -35,6 +37,7 @@ ACTION_SPACE : dict[int, str] = {
 4: 'space',   # No es util considerar esta acción, por ahora al menos.
 5: 'idle',    # No es util considerar esta acción
 }
+'''
 
 '''
     Parametros de la representación matricial de las colisiones (Modificable)
@@ -45,7 +48,9 @@ NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE = 24
 NEXT_LEVEL_MATRIX_VERTICAL_SIZE = 9
 
 '''
-    Constantes del tamaño de los niveles (No modificable)
+    Constantes del repositorio original(No modificable)
 '''
 LEVEL_HORIZONTAL_SIZE = 480 # Cuanto mide el nivel horizontalmente, es una constante del repositorio original
 LEVEL_VERTICAL_SIZE = 360 # Cuanto mide el nivel verticalmente, es una constante del repositorio original
+JUMPCOUNT_MAX = 30 # Cuantos pasos seguidos se puede mantener el salto
+MAX_LEVEL = 42 # Último nivel

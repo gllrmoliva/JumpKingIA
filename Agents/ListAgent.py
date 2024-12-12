@@ -2,6 +2,10 @@
 Agente de prueba. Tiene una lista de acciones a realizar y las realiza conforme la simulación avanza un 'paso'
 '''
 
+##---------------------------------------------------------####
+##        OBSOLETO: LO VOY A CORREGIR DESPUES               ###
+##---------------------------------------------------------####
+
 from Train import Agent, State
 from typing import List, Tuple
 

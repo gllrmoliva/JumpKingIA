@@ -5,6 +5,8 @@ from pathlib import Path
 from Constants import *
 from Matrix import *
 from datetime import datetime
+from typing import Tuple
+import ActionSpace
 
 '''
 Este archivo tiene la función de generalizar lo que es entrenar un agente,
@@ -56,7 +58,7 @@ class State():
         state.jumpCount = game.king.jumpCount
         state.done = game.done
         state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
-        if state.level + 1 <= game.king.levels.max_level:
+        if state.level + 1 <= MAX_LEVEL:
             state.next_level_matrix = get_level_matrix(game, state.level + 1,
                                                     matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
                                                     matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
@@ -132,19 +134,26 @@ class Train():
                  steps_per_episode=STEPS_PER_EPISODE,
                  number_of_episodes=NUMBER_OF_EPISODES,
                  steps_per_second=STEPS_PER_SECOND,
+                 action_space=None,
                  agent_loadpath=None,
                  agent_savepath=None,
                  csv_agentname="UNNAMED",
                  csv_savepath=None):
         
         self.agent : Agent = agent
+
+        self.env : Environment = Environment(steps_per_episode, steps_per_second)
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = number_of_episodes
+
         self.agent_loadpath = agent_loadpath
         self.agent_savepath = agent_savepath
-        self.env : Environment = Environment(self.steps_per_episode, steps_per_second)
+
+        if action_space == None: raise ValueError("Action space needed!")
+        self.action_space : dict[int, Tuple[int, int, str]] = action_space
 
         self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
+        
 
     def run(self):
 
@@ -166,14 +175,31 @@ class Train():
 
                 action = self.agent.select_action(self.state)
 
-                if action not in ACTION_SPACE.keys() : 
+                if action not in self.action_space.keys() : 
                     raise ValueError("Given action not in Action Space!")
 
-                next_state = self.env.step(action)
+                (element_action, repeat, action_name) = self.action_space[action]
+
+                for i in range(repeat + 1):
+                    if i < repeat:
+                        if      element_action == ActionSpace.LEFT:         next_state = self.env.step(ActionSpace.LEFT)
+                        elif    element_action == ActionSpace.RIGHT:        next_state = self.env.step(ActionSpace.RIGHT)
+                        elif    element_action == ActionSpace.SPACE_LEFT:   next_state = self.env.step(ActionSpace.SPACE)
+                        elif    element_action == ActionSpace.SPACE_RIGHT:  next_state = self.env.step(ActionSpace.SPACE)
+                        elif    element_action == ActionSpace.SPACE:        next_state = self.env.step(ActionSpace.SPACE)
+                    else: # Last repeat
+                        if      element_action == ActionSpace.LEFT:         break
+                        elif    element_action == ActionSpace.RIGHT:        break
+                        elif    element_action == ActionSpace.SPACE_LEFT:   next_state = self.env.step(ActionSpace.LEFT)
+                        elif    element_action == ActionSpace.SPACE_RIGHT:  next_state = self.env.step(ActionSpace.RIGHT)
+                        elif    element_action == ActionSpace.SPACE:        next_state = self.env.step(ActionSpace.IDLE)
+                
 
                 self.agent.train(self.state, action, next_state)
 
                 self.state = next_state
+
+                print(self.state.max_height_last_step)
 
                 self.step += 1
             
