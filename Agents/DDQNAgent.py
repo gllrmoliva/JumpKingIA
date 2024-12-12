@@ -101,13 +101,20 @@ class DDQNAgent(Agent):
 
     # Funcion de recompensa, esto es importante!!!!!
     def calculate_reward(self, state: 'State', action: int, next_state: 'State') -> int:
-        #/* k1 >> k2 */
-        k1 = 10 
-        k2 = 1 
+        k1 = 50
+        k2 = 10
+        k3 = 5
+        k4 = 1
+        delta_max_height = next_state.max_height - state.max_height
+        delta_height = next_state.height - state.height
+        if delta_height >= 0:
+            delta_heght_positive = delta_height
+            delta_heght_negative = 0
+        else:
+            delta_heght_positive = 0
+            delta_heght_negative = -1 * delta_height
 
-        p1 = k1*(next_state.height - state.height)                # global 
-        p2 = k2*(next_state.max_height_last_step - state.height)  # local 
-        r = p1 + p2
+        r = k1 * delta_max_height + k2 * delta_heght_positive - k3 * delta_heght_negative - k4
 
         return r
 
@@ -219,6 +226,7 @@ class DDQNAgent(Agent):
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'epsilon': self.epsilon,
                 }
+            torch.save(checkpoint, path)
             print(f"Modelo guardado en {path}")
 
     def state_to_tensor(self, state: 'State') -> torch.Tensor:
@@ -226,7 +234,7 @@ class DDQNAgent(Agent):
         """
         # FIXME: Ahora mismo se van a hacer pruebas con estados más pequeños y tontos
         scalar_values = torch.tensor(
-            [state.x, state.y, state.level,state.jumpCount, int(state.done)], 
+            [state.x, state.y, state.level, int(state.done)], 
             dtype=torch.float
         ).to(self.device)
         
