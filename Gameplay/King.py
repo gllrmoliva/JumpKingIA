@@ -763,17 +763,16 @@ class King():
 		
 		#Hits The Sides
 		if not NO_INTERFACE:
+			if self.rect_x + self.rect_width > self.screen.get_width():
+				self.rect_x = self.screen.get_width() - self.rect_width
+				self.collideRight = True
+				self.collided = True
 
-			rightCollsionCondition = self.rect_x + self.rect_width > self.screen.get_width()
 		else:
-
-			rightCollsionCondition = self.rect_x + self.rect_width > self.screen_width
-
-		if rightCollsionCondition:
-
-			self.rect_x = self.screen.get_width() - self.rect_width
-			self.collideRight = True
-			self.collided = True
+			if self.rect_x + self.rect_width > self.screen_width:
+				self.rect_x = self.screen_width - self.rect_width
+				self.collideRight = True
+				self.collided = True
 
 		if self.rect_x < 0:
 			self.rect_x = 0

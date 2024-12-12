@@ -31,7 +31,8 @@ class State():
     max_height : int = None                             # Altura total máxima alcanzada en el episodio
     max_height_last_step : int = None                   # Altura total máxima alcanzada durante el último paso de juego
     jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
-    done : bool = None                                  # Acabo el episodio
+    done : bool = None                                  # Es el ultimo estado del episodio
+    win : bool = None                                   # Se llegó al último nivel. Notar que: win = True => done = True
     level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
     next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
 
@@ -132,6 +133,7 @@ class Environment():
         self.game.reset()
         self.step_counter = 0
         self.done = False
+
         return State.get_state_from_env(self)
 
     def step(self, action):
