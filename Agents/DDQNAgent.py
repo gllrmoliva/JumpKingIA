@@ -11,14 +11,16 @@ class DQN(nn.Module):
 
     def __init__(self, state_dim: int, action_dim: int , hidden_dim = 256):
         super(DQN,self).__init__()
-        self.fc1 = nn.Linear(state_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, action_dim)
+        self.model = nn.Sequential(
+                        nn.Linear(state_dim, hidden_dim),
+                        nn.ReLU(), 
+                        nn.Linear(hidden_dim, hidden_dim),
+                        nn.ReLU(),
+                        nn.Linear(hidden_dim, action_dim)
+                    )
     
     def forward(self,x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        return self.fc3(x)
+        return self.model(x)
 
 class ReplayMemory():
     def __init__(self, maxlen, seed=None):
@@ -46,7 +48,7 @@ class DDQNAgent(Agent):
         # Variables de entrenamiento
         self.action_space = action_dim # FIXME: Esto se va a tener que arreglar dependiendo de cual va a ser el espacio de acciones
         self.epsilon = 1
-        self.epsilon_decay = 0.9985 
+        self.epsilon_decay = 0.9995 
         self.epsilon_min = 0.05
         self.replay_memory_size = 50000
         self.batch_size = 128 
@@ -55,6 +57,11 @@ class DDQNAgent(Agent):
         self.network_sync_rate = 100
         self.learning_rate_a = 0.01
         self.discount_factor_gamma = 0.99
+
+        if(not is_training):
+            self.epsilon = 0
+            self.epsilon_decay = 1
+            self.epsilon_min = 0
 
         self.loss_fn = nn.MSELoss()         # NN Loss Function. 
         self.optimizer = None               # NN Optimizer. 
@@ -95,8 +102,8 @@ class DDQNAgent(Agent):
     # Funcion de recompensa, esto es importante!!!!!
     def calculate_reward(self, state: 'State', action: int, next_state: 'State') -> int:
         #/* k1 >> k2 */
-        k1 = 25
-        k2 = 5
+        k1 = 10 
+        k2 = 1 
 
         p1 = k1*(next_state.height - state.height)                # global 
         p2 = k2*(next_state.max_height_last_step - state.height)  # local 
@@ -172,19 +179,20 @@ class DDQNAgent(Agent):
 
 
     def end_episode(self):
-        # Al terminar episodio 
-        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        if (self.is_training):
+            # Al terminar episodio 
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
-        # Si suficiente experiencia a sido recolectada
-        if len(self.memory) > self.batch_size:
-            # Sample de memory
-            batch = self.memory.sample(self.batch_size)
-            # Optimize
-            self.optimize(batch, self.policy_dqn, self.target_dqn)
+            # Si suficiente experiencia a sido recolectada
+            if len(self.memory) > self.batch_size:
+                # Sample de memory
+                batch = self.memory.sample(self.batch_size)
+                # Optimize
+                self.optimize(batch, self.policy_dqn, self.target_dqn)
 
-            if self.step_count > self.network_sync_rate:
-                self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
-                self.step_count = 0
+                if self.step_count > self.network_sync_rate:
+                    self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+                    self.step_count = 0
 
         print("End Episode, Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
@@ -194,39 +202,42 @@ class DDQNAgent(Agent):
 
         # Cargar los parámetros del modelo y el optimizador
         self.policy_dqn.load_state_dict(checkpoint['policy_dqn_state_dict'])
-        self.target_dqn.load_state_dict(checkpoint['target_dqn_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.epsilon = checkpoint['epsilon']
+
+        if (self.is_training):
+            self.target_dqn.load_state_dict(checkpoint['target_dqn_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.epsilon = checkpoint['epsilon']
 
         print(f"Modelo cargado desde {path}")
 
     # Para guardar datos del entrenamiento actual
     def save(self, path):
-        checkpoint = {
-            'policy_dqn_state_dict': self.policy_dqn.state_dict(),
-            'target_dqn_state_dict': self.target_dqn.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'epsilon': self.epsilon,
-            }
-        torch.save(checkpoint, path)
-        print(f"Modelo guardado en {path}")
+        if (self.is_training):
+            checkpoint = {
+                'policy_dqn_state_dict': self.policy_dqn.state_dict(),
+                'target_dqn_state_dict': self.target_dqn.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'epsilon': self.epsilon,
+                }
+            print(f"Modelo guardado en {path}")
 
     def state_to_tensor(self, state: 'State') -> torch.Tensor:
         """Transforma los estados a tensores que pueden ser procesados por la Red.
         """
-        ## Esto es tamaño MATRIXLENVER * MATRIXLENHOR + 5
+        # FIXME: Ahora mismo se van a hacer pruebas con estados más pequeños y tontos
         scalar_values = torch.tensor(
             [state.x, state.y, state.level,state.jumpCount, int(state.done)], 
             dtype=torch.float
         ).to(self.device)
         
+        """
         # Aplanar la matriz 2D del nivel y convertirla en un tensor
         level_matrix_tensor = torch.tensor(state.level_matrix.flatten(), dtype=torch.float).to(self.device)
         
         # Concatenar los valores escalares y la matriz aplanada
         full_state_tensor = torch.cat((scalar_values, level_matrix_tensor)).to(self.device)
+        """
 
-        # FIXME: Vamos a correr pruebas con el nivel en el que estamos
-        #full_state_tensor = scalar_values.to(self.device)
+        full_state_tensor = scalar_values.to(self.device)
         
         return full_state_tensor
