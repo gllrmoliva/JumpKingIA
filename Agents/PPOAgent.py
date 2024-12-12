@@ -25,12 +25,13 @@ class ActorCritic(nn.Module):
             nn.Linear(256, 1)
         )
 
+    # No se está utilizando...
     def forward(self, state):
         action_probs = self.actor(state)
         state_value = self.critic(state)
         return action_probs, state_value
 
-
+# No hay método para guardar memoria, se debería agregar para encapsular
 class Memory:
     def __init__(self):
         self.actions = []
@@ -65,6 +66,8 @@ class PPOAgent(Agent):
 
         self.memory = Memory()
 
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         # Métricas de entrenamiento
         self.plotter = MetricsPlotter()
         self.total_rewards = []  # Lista de recompensas acumuladas por episodio
@@ -78,17 +81,19 @@ class PPOAgent(Agent):
         self.memory.clear_memory()
         self.current_episode_rewards = 0
         self.episode_steps = 0
-
+        '''
         # Reducir epsilon gradualmente para favorecer explotación
         self.epsilon = max(self.epsilon * 0.995, 0.05)
+        '''
         logging.info(f"Inicio del episodio {len(self.total_rewards) + 1} - Epsilon: {self.epsilon:.4f}")
+        
 
 
-    def select_action(self, state: State):
+    def select_action(self, level, x, y, jumpCount):
         """
         Selecciona una acción basada en el estado actual.
         """
-        state_tensor = torch.FloatTensor([state.level, state.x, state.y, state.jumpCount]).unsqueeze(0)
+        state_tensor = torch.FloatTensor([level, x, y, jumpCount]).unsqueeze(0)
         with torch.no_grad():
             action_probs, _ = self.policy_old(state_tensor)
         
@@ -106,14 +111,17 @@ class PPOAgent(Agent):
 
         return action
 
-    def train(self, state: State, action: int, next_state: State):
+    # TODO: Dejé action, pero no se esta usando. Verificar por qué
+    def train(self, action: int, level : int, x : int, y : int, max_height : int,
+              max_height_last_step : int, done : bool, jumpCount : int, next_level : int, next_x : int,
+              next_y : int, next_max_height : int, next_done : bool):
         """
         Entrena al agente utilizando las transiciones almacenadas.
         """
         # Calcular recompensa y almacenar en memoria
-        reward = self.compute_reward(state, next_state)
+        reward = self.compute_reward(level, next_level, x, next_x, max_height, next_max_height, max_height_last_step, jumpCount, done, next_done)
         self.memory.rewards.append(reward)
-        self.memory.is_terminals.append(next_state.done)
+        self.memory.is_terminals.append(next_done)
 
         # Actualizar métricas
         self.current_episode_rewards += reward
@@ -124,7 +132,7 @@ class PPOAgent(Agent):
             logging.info(f"Progreso: Episodio {len(self.total_rewards) + 1}, Pasos: {self.episode_steps}, Recompensa Acumulada: {self.current_episode_rewards:.2f}")
 
         # Si el episodio terminó, realiza la actualización del modelo
-        if next_state.done:
+        if next_done:
             self.update()
             self.total_rewards.append(self.current_episode_rewards)
             logging.info(f"Episodio {len(self.total_rewards)} terminado. Recompensa Total: {self.current_episode_rewards:.2f}, Pasos Totales: {self.episode_steps}")
@@ -135,19 +143,25 @@ class PPOAgent(Agent):
         """
         pass
 
-    def compute_reward(self, state: State, next_state: State):
+    # TODO: Quizas incluir jump count o max height last step en alguna parte?
+    def compute_reward(self, level : int, next_level : int, x: int , next_x : int, max_height: int,
+                       next_max_height: int, max_height_last_step : int, jumpCount : int,
+                       done : bool, next_done : bool):
         """
         Calcula la recompensa basada en el cambio de estado.
         """
-        reward = (next_state.max_height - state.max_height) * 10
+        reward = (next_max_height - max_height) * 10
 
         # Penalizar comportamiento repetitivo
-        if state.level == next_state.level and state.x == next_state.x:
+        if level == next_level and x == next_x:
             reward -= 3  # Penalización por falta de progreso
 
         # Recompensa adicional por terminar con éxito
-        if next_state.done:
-            reward += 100 if next_state.max_height > state.max_height else -50
+        if next_done:
+            reward += 100 if next_max_height > max_height else -50
+
+        # Recompensa por avanzar de nivel
+        reward += next_level * 10
 
         # Incentivar exploración
         reward += np.random.uniform(-1, 1) * 0.1
@@ -251,8 +265,7 @@ class PPOAgent(Agent):
             'policy_old_state_dict': self.policy_old.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'epsilon': self.epsilon,
-            'memory': self.memory,  # Aquí guardamos el estado de la memoria (si es necesario)
-            # Se pueden agregar otros parámetros si es necesario
+            'memory': self.memory,  
         }
         torch.save(checkpoint, path)
         logging.info(f"Modelo guardado en {path}")
@@ -262,13 +275,11 @@ class PPOAgent(Agent):
         """
         Carga el modelo, el optimizador, la política antigua y los parámetros clave desde un archivo.
         """
-        checkpoint = torch.load(path)
+        checkpoint = torch.load(path, map_location=self.device)
         self.policy.load_state_dict(checkpoint['policy_state_dict'])
         self.policy_old.load_state_dict(checkpoint['policy_old_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.epsilon = checkpoint['epsilon']
-        
-        # Si es necesario, restaurar la memoria (aunque se podría re-inicializar si es necesario)
+        self.epsilon = 0.1
         self.memory = checkpoint['memory']  # Esto se puede ajustar según cómo se gestione la memoria
         logging.info(f"Modelo cargado desde {path}")
 
