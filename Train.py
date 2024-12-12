@@ -199,8 +199,6 @@ class Train():
 
                 self.state = next_state
 
-                print(self.state.max_height_last_step)
-
                 self.step += 1
             
             self.agent.end_episode()

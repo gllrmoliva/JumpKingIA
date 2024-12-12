@@ -22,13 +22,8 @@ class DQN(nn.Module):
     def forward(self,x):
         return self.model(x)
         
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
 class ImageConvNet(nn.Module):
-    def __init__(self, input_shape=(1, 48, 36), output_size=128):
+    def __init__(self, input_shape=(1, LEVEL_MATRIX_VERTICAL_SIZE, LEVEL_HORIZONTAL_SIZE), output_size=128):
         super(ImageConvNet, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=8, stride=4, padding=0)  # Reduce tamaño
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=0)
@@ -91,6 +86,8 @@ class DDQNAgent(Agent):
         self.network_sync_rate = 100
         self.learning_rate_a = 0.01
         self.discount_factor_gamma = 0.99
+        self.CNN = ImageConvNet().to(self.device)   # Red CNN
+        self.levels_CNN = [-1] * MAX_LEVEL          # Que guardara el nivel CNN.
 
         if(not is_training):
             self.epsilon = 0
@@ -258,20 +255,30 @@ class DDQNAgent(Agent):
     def state_to_tensor(self, state: 'State') -> torch.Tensor:
         """Transforma los estados a tensores que pueden ser procesados por la Red.
         """
-        # FIXME: Ahora mismo se van a hacer pruebas con estados más pequeños y tontos
+        # En teoria esto es 3
         scalar_values = torch.tensor(
-            [state.x, state.y, state.level,state.jumpCount, int(state.done)], 
+            [state.x, state.y, int(state.done)], 
             dtype=torch.float
         ).to(self.device)
         
+        # En teoria esto es 128
+        if(self.levels_CNN[state.level] == -1):
+            input_image_tensor = torch.tensor(state.level_matrix).unsqueeze(0).unsqueeze(0).float().to(self.device)
+            level_tensor = self.CNN(input_image_tensor)
+            self.levels_CNN[state.level] = level_tensor
+        
+
+
+        full_state_tensor = torch.cat((scalar_values, self.levels_CNN[state.level])).to(self.device)
+
         """
         # Aplanar la matriz 2D del nivel y convertirla en un tensor
         level_matrix_tensor = torch.tensor(state.level_matrix.flatten(), dtype=torch.float).to(self.device)
         
         # Concatenar los valores escalares y la matriz aplanada
         full_state_tensor = torch.cat((scalar_values, level_matrix_tensor)).to(self.device)
-        """
 
         full_state_tensor = scalar_values.to(self.device)
+        """
         
         return full_state_tensor

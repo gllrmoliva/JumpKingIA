@@ -59,11 +59,11 @@ if __name__ == "__main__":
 	#Game.running()
 
 	#train()
-	path = "model_ddqn_episode"
+	path = "model_ddqn_cnn_episode"
 
 	action_space = generate_action_space(num_of_actions=12)
 
-	t = Train.Train(DDQNAgent(	state_dim=5,
+	t = Train.Train(DDQNAgent(	state_dim=131,
 						    	action_dim=len(action_space),
 								is_training=True),
 							action_space=action_space,
