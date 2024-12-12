@@ -46,7 +46,7 @@ class DDQNAgent(Agent):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # Variables de entrenamiento
-        self.action_space = action_dim # FIXME: Esto se va a tener que arreglar dependiendo de cual va a ser el espacio de acciones
+        self.action_dim = action_dim # FIXME: Esto se va a tener que arreglar dependiendo de cual va a ser el espacio de acciones
         self.epsilon = 1
         self.epsilon_decay = 0.9995 
         self.epsilon_min = 0.05
@@ -90,7 +90,7 @@ class DDQNAgent(Agent):
         state_tensor = self.state_to_tensor(state)
 
         if random.random() < self.epsilon:
-            action = random.choice(list(ACTION_SPACE.keys()))
+            action = random.randint(0, self.action_dim-1)
 
         else: 
             with torch.no_grad():
@@ -150,14 +150,14 @@ class DDQNAgent(Agent):
         terminations = torch.tensor(terminations, dtype=torch.float, device=self.device)
 
         # Validate actions
-        assert torch.all((actions >= 0) & (actions < self.action_space)), "Actions out of bounds"
+        assert torch.all((actions >= 0) & (actions < self.action_dim)), "Actions out of bounds"
 
         with torch.no_grad():
             # Calculate target Q values (expected returns)
 
             best_actions_from_policy = self.policy_dqn(new_states).argmax(dim=1)
 
-            assert torch.all((best_actions_from_policy >= 0) & (best_actions_from_policy < self.action_space)), \
+            assert torch.all((best_actions_from_policy >= 0) & (best_actions_from_policy < self.action_dim)), \
             "Best actions out of bounds"
 
             target_q =  rewards + (1- terminations) * self.discount_factor_gamma * \

@@ -14,6 +14,7 @@ from Agents.LeftRightAgent import LeftRightAgent
 from Agents.ListAgent import ListAgent
 from Agents.DDQNAgent import DDQNAgent
 from Agents.LoadSaveAgent import LoadSaveAgent
+from ActionSpace import generate_action_space
 from JumpKing import JKGame
 from Constants import *
 
@@ -22,7 +23,7 @@ from Constants import *
 Esta función corresponde el entrenamiento del repositorio original.
 Ya no esta siendo utilizada. Aun así creo que es bueno dejarla por ahora.
 En cambio en Train.py hay una clase Train que pretende generalizar a un Agente con un método cualquiera y añadir funcionalidades.
-'''
+
 def train():
 	# Funcion para entrenar la IA
 	action_dict = {
@@ -51,6 +52,7 @@ def train():
 			agent.train(state, action, reward, next_state, sign)
 			state = next_state
 		print (f'episode: {i}, reward: {running_reward}')
+'''
 
 if __name__ == "__main__":
 	#Game = JKGame()
@@ -59,12 +61,18 @@ if __name__ == "__main__":
 	#train()
 	path = "model_ddqn_episode"
 
+	action_space = generate_action_space(num_of_actions=12)
+
 	t = Train.Train(DDQNAgent(	state_dim=5,
-						    	action_dim=len(ACTION_SPACE),
+						    	action_dim=len(action_space),
 								is_training=True),
+							action_space=action_space,
 							csv_savepath= path + ".csv",
 							agent_savepath= path + ".pth",
 							#agent_loadpath= path + ".pth"
 							)
-	#t = Train.Train(RandomAgent(), csv_savepath="test.csv")
+
+
+	# t = Train.Train(RandomAgent(len(action_space)), action_space=action_space, csv_savepath="test.csv")
+
 	t.run()
