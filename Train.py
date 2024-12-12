@@ -58,7 +58,7 @@ class State():
         state.jumpCount = game.king.jumpCount
         state.done = game.done
         state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
-        if state.level + 1 <= game.king.levels.max_level:
+        if state.level + 1 <= MAX_LEVEL:
             state.next_level_matrix = get_level_matrix(game, state.level + 1,
                                                     matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
                                                     matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,

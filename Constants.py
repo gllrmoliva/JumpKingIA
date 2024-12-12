@@ -17,7 +17,7 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
 '''
     Parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 3001  # Número de pasos máximo a simular en un episodio
+STEPS_PER_EPISODE = 30010  # Número de pasos máximo a simular en un episodio
 NUMBER_OF_EPISODES = 6000 # Número de episodios a simular
 STEPS_PER_SECOND = 60     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
                           # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
@@ -53,3 +53,4 @@ NEXT_LEVEL_MATRIX_VERTICAL_SIZE = 9
 LEVEL_HORIZONTAL_SIZE = 480 # Cuanto mide el nivel horizontalmente, es una constante del repositorio original
 LEVEL_VERTICAL_SIZE = 360 # Cuanto mide el nivel verticalmente, es una constante del repositorio original
 JUMPCOUNT_MAX = 30 # Cuantos pasos seguidos se puede mantener el salto
+MAX_LEVEL = 42 # Último nivel
