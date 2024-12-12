@@ -21,6 +21,40 @@ class DQN(nn.Module):
     
     def forward(self,x):
         return self.model(x)
+        
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class ImageConvNet(nn.Module):
+    def __init__(self, input_shape=(1, 48, 36), output_size=128):
+        super(ImageConvNet, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=8, stride=4, padding=0)  # Reduce tamaño
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=0)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=0)
+
+        # Calcular la salida de las convoluciones para inicializar el linear layer
+        with torch.no_grad():
+            sample_input = torch.zeros(1, *input_shape)  # Entrada ficticia
+            conv_output_size = self._get_conv_output(sample_input)
+        
+        self.fc = nn.Linear(conv_output_size, output_size)  # Fully connected para reducir dimensiones
+
+    def _get_conv_output(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        return int(torch.flatten(x, start_dim=1).shape[1])
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = torch.flatten(x, start_dim=1)  # Aplanar para la capa totalmente conectada
+        x = self.fc(x)
+        return x
+
 
 class ReplayMemory():
     def __init__(self, maxlen, seed=None):
