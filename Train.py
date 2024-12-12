@@ -23,7 +23,7 @@ Está clase modela un estado y
 """
 class State():
 
-    # Attributes
+    # Atributos
     level : int = None                                  # Número del nivel actual
     x : int = None                                      # Coordenada x del King. Aumenta de izquierda a derecha
     y : int = None                                      # Coordenada y del King. ¡Aumenta de arriba hacia abajo!
@@ -34,6 +34,9 @@ class State():
     done : bool = None                                  # Acabo el episodio
     level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
     next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
+
+    # Atributos privados
+    _normalized = False
 
     '''
     Busca los valores que describen el estado y los almacena en los atributos
@@ -70,6 +73,22 @@ class State():
                                         NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
                                         dtype=np.uint8)
         return state
+
+    '''
+    Normaliza cada atributo del estado, asignandole un valor entre 0 y 1
+    ¡Notar que en este proceso se transforman los valores a float!
+    '''
+    def normalize(self):
+        if self._normalized:
+            raise ValueError("Trying to normalize State already normalized!")
+        self.level                  /= MAX_LEVEL
+        self.x                      /= LEVEL_HORIZONTAL_SIZE
+        self.y                      /= LEVEL_VERTICAL_SIZE
+        self.height                 /= GAME_MAX_HEIGHT
+        self.max_height             /= GAME_MAX_HEIGHT
+        self.max_height_last_step   /= GAME_MAX_HEIGHT
+        self.jumpCount              /= JUMPCOUNT_MAX
+        self._normalized = True
 
 '''
 Interfaz que modela un agente.

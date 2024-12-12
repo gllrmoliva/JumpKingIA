@@ -8,8 +8,8 @@
 '''
     Parametros de depuración y ejecución
 '''
-NO_INTERFACE = False # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
-CSV_COOLDOWN = 10 # Cuantos pasos deben pasar para que volver a escribir en un .csv
+NO_INTERFACE = True# Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
+CSV_COOLDOWN = 500 # Cuantos pasos deben pasar para que volver a escribir en un .csv
 
 DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
@@ -18,8 +18,8 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
     Parametros de entrenamiento (Modificable)
 '''
 STEPS_PER_EPISODE = 3001  # Número de pasos máximo a simular en un episodio
-NUMBER_OF_EPISODES = 6000 # Número de episodios a simular
-STEPS_PER_SECOND = 60     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+NUMBER_OF_EPISODES = 12000 # Número de episodios a simular
+STEPS_PER_SECOND = -1     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
                           # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
 
 ACTION_SPACE_SIZE = 2 + 5*2     # Número de acciones del espacio de acciones
@@ -50,7 +50,8 @@ NEXT_LEVEL_MATRIX_VERTICAL_SIZE = 9
 '''
     Constantes del repositorio original(No modificable)
 '''
-LEVEL_HORIZONTAL_SIZE = 480 # Cuanto mide el nivel horizontalmente, es una constante del repositorio original
-LEVEL_VERTICAL_SIZE = 360 # Cuanto mide el nivel verticalmente, es una constante del repositorio original
-JUMPCOUNT_MAX = 30 # Cuantos pasos seguidos se puede mantener el salto
-MAX_LEVEL = 42 # Último nivel
+LEVEL_HORIZONTAL_SIZE = 480     # Cuanto mide el nivel horizontalmente, es una constante del repositorio original
+LEVEL_VERTICAL_SIZE = 360       # Cuanto mide el nivel verticalmente, es una constante del repositorio original
+JUMPCOUNT_MAX = 30              # Cuantos pasos seguidos se puede mantener el salto
+MAX_LEVEL = 42                  # Último nivel (¡Se comienza a contar desde el 0!)
+GAME_MAX_HEIGHT = 15480         # Altura máxima alcanzable

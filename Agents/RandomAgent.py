@@ -11,4 +11,5 @@ class RandomAgent(Agent):
         self.action_space_size = action_space_size
 
     def select_action(self, state):
+        
         return randint(0, self.action_space_size - 1)

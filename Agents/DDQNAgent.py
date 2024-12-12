@@ -8,6 +8,9 @@ from Train import Agent, State
 from Constants import *
 
 class DQN(nn.Module):
+    """ Red neuronal que se utilizara para el DDQN.
+    obs: esta puede ser modificada para optimizar su uso con el JumpKing
+    """
 
     def __init__(self, state_dim: int, action_dim: int , hidden_dim = 256):
         super(DQN,self).__init__()
@@ -52,7 +55,15 @@ class ImageConvNet(nn.Module):
 
 
 class ReplayMemory():
+    """
+    Clase que modela Replay Memory, basicamente es un deque pero solo con las funciones que se 
+    utilizaran en el replay memory. Recordar que ReplayMemory guarda tuplas (trancisiones):
+    (state, action, new_state, reward, terminated)
+    """
+
     def __init__(self, maxlen, seed=None):
+        """ - maxlen: cantidad máxima de elementos que puede guardar Replay Memory
+        """
         self.memory = deque([], maxlen=maxlen)
         if seed is not None:
             random.seed(seed)
@@ -62,6 +73,8 @@ class ReplayMemory():
         self.memory.append(transition)
     
     def sample(self, sample_size):
+        """ Devuelve una muestra de la memoria.
+        """
         return random.sample(self.memory, sample_size)
 
     def __len__(self):
@@ -69,60 +82,82 @@ class ReplayMemory():
 
 
 class DDQNAgent(Agent):
+    
+
     def __init__(self, state_dim: int, action_dim: int, is_training: bool):
+        """Contructor de DDQNAgent
+        - state_dim: Cantidad de nodos de entrada (dimensión de estados)
+        - action_dim: Cantidad de nodos de salida (acciones posibles del agente)
+        - is_trainig: True, Entrena al modelo (modifica la red); False, El modelo solo toma decisiones (epsilon=0, no modifica la red)
+        """
 
         # Entrenamos en GPU si se puede
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print(f"Dispositivo utilizado: {self.device}")
+
+        self.is_training = is_training
 
         # Variables de entrenamiento
-        self.action_dim = action_dim # FIXME: Esto se va a tener que arreglar dependiendo de cual va a ser el espacio de acciones
-        self.epsilon = 1
-        self.epsilon_decay = 0.9995 
-        self.epsilon_min = 0.05
-        self.replay_memory_size = 50000
-        self.batch_size = 128 
-        self.episode_reward = 0
-        self.step_count = 0
-        self.network_sync_rate = 100
-        self.learning_rate_a = 0.01
-        self.discount_factor_gamma = 0.99
+        self.action_dim = action_dim        # Cantidad de acciones que se pueden hacer 
+        self.learning_rate_a = 0.01         # Que tan rapido "aprende" el agente
+        self.discount_factor_gamma = 0.99   # 
+        self.epsilon = 1                    # Epsilon (probabilidad inicial de hacer acciones aleatorias)
+        self.epsilon_decay = 0.9995         # Cuando disminuye por episodio la probabilidad de hacer acciones aleatorias
+        self.epsilon_min = 0.05             # Valor minimo que puede alcanzar el epsilon en el periodo de entramiento
+        self.replay_memory_size = 50000     # Tamaño de la Replay Memory
+        self.batch_size = 128               # Cantidad de muestras que que extraen del Replay Memory
+        self.episode_reward = 0             # Recompensa total del episodio
+        self.step_count = 0                 # Cantidad de pasos dados
         self.CNN = ImageConvNet().to(self.device)   # Red CNN
         self.levels_CNN = [-1] * MAX_LEVEL          # Que guardara el nivel CNN.
 
-        if(not is_training):
-            self.epsilon = 0
-            self.epsilon_decay = 1
-            self.epsilon_min = 0
+        self.network_sync_rate = 100        # Cantidad de pasos en los que las redes (policy y target) se sincronizan, esto se podria
+                                            # Cambiar a 0, para que se sincronizen a cada paso, pero hace que el entrenamiento se 
+                                            # Relentice mucho
 
         self.loss_fn = nn.MSELoss()         # NN Loss Function. 
         self.optimizer = None               # NN Optimizer. 
 
-        # Red Policy
-        self.policy_dqn = DQN(state_dim, action_dim).to(self.device)
-        self.is_training = is_training
+        self.policy_dqn = DQN(state_dim, action_dim).to(self.device)    # Red Policy (red a la que se le hacen las consultas)
 
-        # Si vamos a entrenar usamos esto.
+        # Si Entrenamos: 
         if self.is_training:
-            self.memory = ReplayMemory(self.replay_memory_size)
-            self.target_dqn = DQN(state_dim, action_dim).to(self.device)
-            self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+            self.memory = ReplayMemory(self.replay_memory_size)                 # Generamos la deque ReplayMemory
 
-            self.optimizer = torch.optim.Adam(self.policy_dqn.parameters(), lr = self.learning_rate_a)
+            self.target_dqn = DQN(state_dim, action_dim).to(self.device)        # Generamos la red objetivo (hacia donde quiere ir la policy)
+            self.target_dqn.load_state_dict(self.policy_dqn.state_dict())       # Copiamos Policy en target
+
+            self.optimizer = torch.optim.Adam(self.policy_dqn.parameters(),     # Cargamos optimizador de Pytorch (Magia o Matemática¿?)
+                                               lr = self.learning_rate_a)
+        # Si no entrenamos
+        else: 
+            self.epsilon = 0
+            self.epsilon_decay = 1
+            self.epsilon_min = 0
 
 
-    # Se llama cuando inicia un episodio.
-    # Deberia, por ejemplo, inicializar variables locales a un solo episodio
     def start_episode(self):
+        """ Acción que se hace al iniciar un episodio.
+        """
+
+        # Reseteamos La recompensa del episodio
         self.episode_reward = 0
 
     # Devuelve que acción tomar segun un estado de juego
     def select_action(self, state: 'State'):
+        """ Seleccionamos una acción del espacio de acciones, esta decisión puede ser tomada:
+        1. De forma aleatoria (greedy)
+        2. Utilizando la Policy_DQN
+        """
 
+        # Transformamos el estado a un tensor (utilizado por RedDQN)
         state_tensor = self.state_to_tensor(state)
 
+        # Probabilidad de hacer movimiento aleatorio (epsilon)
         if random.random() < self.epsilon:
             action = random.randint(0, self.action_dim-1)
 
+        # Probabilidad de hacer un movimiento a traves de Policy (1-epsilon)
         else: 
             with torch.no_grad():
                 q_values = self.policy_dqn(state_tensor.unsqueeze(0))
@@ -130,78 +165,120 @@ class DDQNAgent(Agent):
         
         return action
 
-    # Funcion de recompensa, esto es importante!!!!!
     def calculate_reward(self, state: 'State', action: int, next_state: 'State') -> int:
-        #/* k1 >> k2 */
-        k1 = 10 
-        k2 = 1 
+        """Función de recompensa. Se utiliza al entrenar el modelo.
+        OBS: esta debe ser modificada hasta optimizar el modelo.
+        """
 
-        p1 = k1*(next_state.height - state.height)                # global 
-        p2 = k2*(next_state.max_height_last_step - state.height)  # local 
-        r = p1 + p2
+        k1 = 50
+        k2 = 10
+        k3 = 5
+        k4 = 1
 
-        return r
+        delta_max_height = next_state.max_height - state.max_height
+        delta_height = next_state.height - state.height
+
+        if delta_height >= 0:
+            delta_heght_positive = delta_height
+            delta_heght_negative = 0
+        else:
+            delta_heght_positive = 0
+            delta_heght_negative = -1 * delta_height
+
+        reward = k1 * delta_max_height + k2 * delta_heght_positive - k3 * delta_heght_negative - k4
+
+        return reward
 
     # Entrena al modelo sabiendo que acción tomó en un estado, y a que otro estado llevó
     # Acá podria por ejemplo: Calcular recompensa, actualizar recompensa acumulada, etc.
     def train(self, state: 'State', action: int, next_state: 'State'):
+        """ Entrenamos a la Red Policy de la siguiente manera:
+        1. Calculamos Recompensa
+        2. Si se está entrenando: 
+        2.a) Añadimos transición a Replay Memory
+        2.b) Entrenamos la Policy DQN.
+        3. Añadimos recompenza a la recompensa por episodio
+        """
+        
+        # FIXME: .done tiene que ser cambiado por otra cosa jejeje. Posiblemente poner un estado TOPE
+
+        # 1. Calcular Recompensa
         reward = self.calculate_reward(state, action, next_state)
-        self.episode_reward += reward
+
         done = next_state.done
 
         # Transformamos los estados a tensores
         state_tensor = self.state_to_tensor(state)
         next_state_tensor = self.state_to_tensor(next_state)
 
-        # Solo si estamos entrenando utilizamos la memoria
+        # 2.  
+        # Se mejora la red con back propagation, esto igualmente se puede cambiar a END_EPISODE si se quiere hacer
+        # de forma menos recurrente, OJO: Ahora los episodios deberias ser más o menos lentos
         if self.is_training:
+
+            # 2.a
             self.memory.append((state_tensor, action, next_state_tensor, reward, done))
             self.step_count += 1
+
+           # Si suficiente experiencia a sido recolectada
+           # 2.b
+            if len(self.memory) > self.batch_size:
+
+                # Sample de memory
+                batch = self.memory.sample(self.batch_size)
+
+                # Optimize
+                self.optimize(batch, self.policy_dqn, self.target_dqn)
+
+                # Sincronizar Redes
+                if self.step_count > self.network_sync_rate:
+                    self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+                    self.step_count = 0
+
+        # Sumamos recompensa actual a episodio
+        self.episode_reward += reward
         
-    # Se llama cuando acaba el episodio cambiamos el epsilon.
 
     def optimize(self, batch, policy_dqn, target_dqn):
+        """
+        Funcion para aplicar la optimización. (Vodoo)
+        """
 
+        # Del sample, recuperamos las transiciones
         states, actions, new_states, rewards, terminations = zip(*batch)
 
         states = torch.stack(states)
 
-        #actions = torch.stack(actions)
-        # Aqui me tiraba un error, con esto se arreglo, pero no se porque
         actions = torch.tensor(actions, dtype=torch.long, device=self.device)
 
         new_states = torch.stack(new_states)
 
-        # rewards = torch.stack(rewards)
-        # Aqui lo mismo
         rewards = torch.tensor(rewards, dtype=torch.float, device=self.device)
 
-        #terminations = torch.tensor(terminations).float().to(self.device)
-        # Aqui lo mismo
         terminations = torch.tensor(terminations, dtype=torch.float, device=self.device)
 
-        # Validate actions
         assert torch.all((actions >= 0) & (actions < self.action_dim)), "Actions out of bounds"
 
         with torch.no_grad():
-            # Calculate target Q values (expected returns)
 
+            # Calcular target Q values (Returns esperados)
             best_actions_from_policy = self.policy_dqn(new_states).argmax(dim=1)
 
             assert torch.all((best_actions_from_policy >= 0) & (best_actions_from_policy < self.action_dim)), \
             "Best actions out of bounds"
 
+            # Funcion DDQN
             target_q =  rewards + (1- terminations) * self.discount_factor_gamma * \
                         target_dqn(new_states).gather(dim=1, index=best_actions_from_policy.unsqueeze(dim=1)).squeeze()
 
         
-        # Calculate Q values from current policy 
+        # Calcular Q values desde Policy actual
         current_q = policy_dqn(states).gather(dim=1, index= actions.unsqueeze(dim=1)).squeeze()
 
         assert current_q.shape == target_q.shape, \
         f"Shape mismatch: current_q {current_q.shape}, target_q {target_q.shape}"
 
-        # Compute loss for the whole batch
+        # Computar Loss 
         loss = self.loss_fn(current_q, target_q)
 
         self.optimizer.zero_grad()  # Clear gradients
@@ -210,25 +287,21 @@ class DDQNAgent(Agent):
 
 
     def end_episode(self):
+        """Terminar el episodio, entregar datos de episodio y disminuir epsilon (progresión geometrica)
+        """
+        
+        # Modificamos el Epsilon
         if (self.is_training):
-            # Al terminar episodio 
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-
-            # Si suficiente experiencia a sido recolectada
-            if len(self.memory) > self.batch_size:
-                # Sample de memory
-                batch = self.memory.sample(self.batch_size)
-                # Optimize
-                self.optimize(batch, self.policy_dqn, self.target_dqn)
-
-                if self.step_count > self.network_sync_rate:
-                    self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
-                    self.step_count = 0
 
         print("End Episode, Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
-    # Para cargar datos de entrenamientos previos
     def load(self, path):
+        """ Cargamos datos de entrenamientos previos. Esto seria:
+        1. Si NO estamos entrenando solo red policy
+        2. Si estamos entrenando: red policy, última red target, optimizer, epsilon
+        """
+        
         checkpoint = torch.load(path, map_location=self.device)
 
         # Cargar los parámetros del modelo y el optimizador
@@ -243,6 +316,9 @@ class DDQNAgent(Agent):
 
     # Para guardar datos del entrenamiento actual
     def save(self, path):
+        """Solo si estamos entrenando guardamos, toda la red.
+        """
+        
         if (self.is_training):
             checkpoint = {
                 'policy_dqn_state_dict': self.policy_dqn.state_dict(),
@@ -250,6 +326,7 @@ class DDQNAgent(Agent):
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'epsilon': self.epsilon,
                 }
+            torch.save(checkpoint, path)
             print(f"Modelo guardado en {path}")
 
     def state_to_tensor(self, state: 'State') -> torch.Tensor:
