@@ -6,6 +6,7 @@ import random
 import time
 from pathlib import Path
 
+from Agents.PPOAgent import PPOAgent
 from DDQN import DDQN
 
 import Train
@@ -57,14 +58,16 @@ if __name__ == "__main__":
 	#Game.running()
 
 	#train()
-	path = "model_ddqn_episode"
+  
+	torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-	t = Train.Train(DDQNAgent(	state_dim=LEVEL_MATRIX_HORIZONTAL_SIZE* LEVEL_MATRIX_VERTICAL_SIZE + 5,
-						    	action_dim=len(ACTION_SPACE),
-								is_training=True),
-							csv_savepath= path + ".csv",
-							agent_savepath= path + ".pth",
-							agent_loadpath= path + ".pth"
-							)
-	#t = Train.Train(RandomAgent(), csv_savepath="test.csv")
-	t.run()
+	""" t = Train.Train(ListAgent(), csv_savepath="test.csv")
+	t.run() """
+	state_dim = 4
+	action_dim = 5
+	agent = PPOAgent(state_dim, action_dim)
+	trainer = Train.Train(agent,
+						agent_savepath="model_ppo_episode.pth",
+						csv_savepath="ppo_training.csv")
+	trainer.run()
+	agent.plot()

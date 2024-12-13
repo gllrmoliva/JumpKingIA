@@ -30,8 +30,8 @@ class State():
     max_height_last_step : int = None                   # Altura total máxima alcanzada durante el último paso de juego
     jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
     done : bool = None                                  # Acabo el episodio
-    level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
-    next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
+    #level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
+    #next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
 
     '''
     Busca los valores que describen el estado y los almacena en los atributos
@@ -55,6 +55,7 @@ class State():
         state.max_height_last_step = game.max_height_last_step
         state.jumpCount = game.king.jumpCount
         state.done = game.done
+        '''
         state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
         if state.level + 1 <= game.king.levels.max_level:
             state.next_level_matrix = get_level_matrix(game, state.level + 1,
@@ -67,6 +68,7 @@ class State():
                                         NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
                                         NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
                                         dtype=np.uint8)
+        '''
         return state
 
 '''
