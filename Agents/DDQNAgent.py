@@ -5,17 +5,20 @@ from collections import deque
 import random
 
 from Train import Agent, State
+from Constants import *
 
 class DQN(nn.Module):
 
     def __init__(self, state_dim: int, action_dim: int , hidden_dim = 256):
         super(DQN,self).__init__()
         self.fc1 = nn.Linear(state_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, action_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, action_dim)
     
     def forward(self,x):
         x = F.relu(self.fc1(x))
-        return self.fc2(x)
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
 
 class ReplayMemory():
     def __init__(self, maxlen, seed=None):
@@ -43,14 +46,14 @@ class DDQNAgent(Agent):
         # Variables de entrenamiento
         self.action_space = action_dim # FIXME: Esto se va a tener que arreglar dependiendo de cual va a ser el espacio de acciones
         self.epsilon = 1
-        self.epsilon_decay = 0.9995
+        self.epsilon_decay = 0.9985 
         self.epsilon_min = 0.05
-        self.replay_memory_size = 10000
-        self.batch_size = 64 
+        self.replay_memory_size = 50000
+        self.batch_size = 128 
         self.episode_reward = 0
         self.step_count = 0
         self.network_sync_rate = 100
-        self.learning_rate_a = 0.001
+        self.learning_rate_a = 0.01
         self.discount_factor_gamma = 0.99
 
         self.loss_fn = nn.MSELoss()         # NN Loss Function. 
@@ -80,21 +83,29 @@ class DDQNAgent(Agent):
         state_tensor = self.state_to_tensor(state)
 
         if random.random() < self.epsilon:
-            action = random.choice(range(self.action_space))
+            action = random.choice(list(ACTION_SPACE.keys()))
 
-        with torch.no_grad():
-            q_values = self.policy_dqn(state_tensor.unsqueeze(0))
-            action = torch.argmax(q_values).item()
+        else: 
+            with torch.no_grad():
+                q_values = self.policy_dqn(state_tensor.unsqueeze(0))
+                action = torch.argmax(q_values).item()
         
         return action
 
     # Funcion de recompensa, esto es importante!!!!!
     def calculate_reward(self, state: 'State', action: int, next_state: 'State') -> int:
-        return 0
+        #/* k1 >> k2 */
+        k1 = 25
+        k2 = 5
+
+        p1 = k1*(next_state.height - state.height)                # global 
+        p2 = k2*(next_state.max_height_last_step - state.height)  # local 
+        r = p1 + p2
+
+        return r
 
     # Entrena al modelo sabiendo que acción tomó en un estado, y a que otro estado llevó
     # Acá podria por ejemplo: Calcular recompensa, actualizar recompensa acumulada, etc.
-    # FIXME: Quizas tiene más sentido llamar a esto run()
     def train(self, state: 'State', action: int, next_state: 'State'):
         reward = self.calculate_reward(state, action, next_state)
         self.episode_reward += reward
@@ -117,18 +128,30 @@ class DDQNAgent(Agent):
 
         states = torch.stack(states)
 
-        actions = torch.stack(actions)
+        #actions = torch.stack(actions)
+        # Aqui me tiraba un error, con esto se arreglo, pero no se porque
+        actions = torch.tensor(actions, dtype=torch.long, device=self.device)
 
         new_states = torch.stack(new_states)
 
-        rewards = torch.stack(rewards)
+        # rewards = torch.stack(rewards)
+        # Aqui lo mismo
+        rewards = torch.tensor(rewards, dtype=torch.float, device=self.device)
 
-        terminations = torch.tensor(terminations).float().to(self.device)
+        #terminations = torch.tensor(terminations).float().to(self.device)
+        # Aqui lo mismo
+        terminations = torch.tensor(terminations, dtype=torch.float, device=self.device)
+
+        # Validate actions
+        assert torch.all((actions >= 0) & (actions < self.action_space)), "Actions out of bounds"
 
         with torch.no_grad():
             # Calculate target Q values (expected returns)
 
             best_actions_from_policy = self.policy_dqn(new_states).argmax(dim=1)
+
+            assert torch.all((best_actions_from_policy >= 0) & (best_actions_from_policy < self.action_space)), \
+            "Best actions out of bounds"
 
             target_q =  rewards + (1- terminations) * self.discount_factor_gamma * \
                         target_dqn(new_states).gather(dim=1, index=best_actions_from_policy.unsqueeze(dim=1)).squeeze()
@@ -136,6 +159,9 @@ class DDQNAgent(Agent):
         
         # Calculate Q values from current policy 
         current_q = policy_dqn(states).gather(dim=1, index= actions.unsqueeze(dim=1)).squeeze()
+
+        assert current_q.shape == target_q.shape, \
+        f"Shape mismatch: current_q {current_q.shape}, target_q {target_q.shape}"
 
         # Compute loss for the whole batch
         loss = self.loss_fn(current_q, target_q)
@@ -160,20 +186,37 @@ class DDQNAgent(Agent):
                 self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
                 self.step_count = 0
 
-        print("End Episode, Acumulative reward: {}".format(self.episode_reward))
+        print("End Episode, Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
     # Para cargar datos de entrenamientos previos
     def load(self, path):
-        pass
+        checkpoint = torch.load(path, map_location=self.device)
+
+        # Cargar los parámetros del modelo y el optimizador
+        self.policy_dqn.load_state_dict(checkpoint['policy_dqn_state_dict'])
+        self.target_dqn.load_state_dict(checkpoint['target_dqn_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.epsilon = checkpoint['epsilon']
+
+        print(f"Modelo cargado desde {path}")
+
     # Para guardar datos del entrenamiento actual
     def save(self, path):
-        pass
+        checkpoint = {
+            'policy_dqn_state_dict': self.policy_dqn.state_dict(),
+            'target_dqn_state_dict': self.target_dqn.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'epsilon': self.epsilon,
+            }
+        torch.save(checkpoint, path)
+        print(f"Modelo guardado en {path}")
 
     def state_to_tensor(self, state: 'State') -> torch.Tensor:
         """Transforma los estados a tensores que pueden ser procesados por la Red.
         """
+        ## Esto es tamaño MATRIXLENVER * MATRIXLENHOR + 5
         scalar_values = torch.tensor(
-            [state.x, state.y, state.level, int(state.done)], 
+            [state.x, state.y, state.level,state.jumpCount, int(state.done)], 
             dtype=torch.float
         ).to(self.device)
         
@@ -182,5 +225,8 @@ class DDQNAgent(Agent):
         
         # Concatenar los valores escalares y la matriz aplanada
         full_state_tensor = torch.cat((scalar_values, level_matrix_tensor)).to(self.device)
+
+        # FIXME: Vamos a correr pruebas con el nivel en el que estamos
+        #full_state_tensor = scalar_values.to(self.device)
         
         return full_state_tensor

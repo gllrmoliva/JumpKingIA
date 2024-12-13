@@ -22,12 +22,16 @@ Cada elemento de la lista es de la forma (a, t), con:
     t: Por cuantos 'pasos' repetira dicha acción
 '''
 ACTIONS_LIST : List[Tuple[int, int]] = [
-    (SPACE_RIGHT, 30), (RIGHT, 1),  # Despues de terminar un salto es importante especificar en que dirección
-    (RIGHT, 20),                    # de hecho, SPACE_RIGHT (por ejemplo) no implica que se saltará hacia la derecha
-    (SPACE_LEFT, 30), (LEFT, 1),    # tan sólo que para ese 'paso' se estará pulsando la tecla de salto y la flecha derecha
-    (LEFT, 40),                     # Pero la dirección la determina el 'paso' siguiente a liberar el salto
+    (SPACE_RIGHT, 30), (RIGHT, 1),  
+    (RIGHT, 20),                    
+    (SPACE_LEFT, 30), (LEFT, 1),    
+    (LEFT, 40),                     
     (SPACE_RIGHT, 30), (RIGHT, 1),
 ]
+# Despues de terminar un salto es importante especificar en que dirección
+# de hecho, SPACE_RIGHT (por ejemplo) no implica que se saltará hacia la derecha
+# tan sólo que para ese 'paso' se estará pulsando la tecla de salto y la flecha derecha
+# Pero la dirección la determina el 'paso' siguiente a liberar el salto
 
 class ListAgent(Agent):
 
