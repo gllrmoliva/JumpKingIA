@@ -7,6 +7,15 @@ import random
 from Train import Agent, State
 from Constants import *
 
+REWARD_FOR_WALKING =                        -2
+REWARD_FOR_JUMPING =                        -5
+REWARD_FOR_GOING_DOWN =                     -3   # Asumiendo una caida promedio de 720, para un total promedio de 50
+REWARD_FOR_GOING_UP =                       5       # Asumiendo una subida promedio de 50 (¡Pero la mayoria de saltos suelen ser caidas!), para un total promedio de 250
+REWARD_FOR_NEW_MAX_HEIGHT =                 10      # Recompensamos el doble, para un total promedio de 750
+STATIC_REWARD_FOR_NEW_MAX_HEIGHT =          100     # Para un caso borde donde la altura ganada es poca (¡Igual nos interesa premiar!)
+REWARD_FOR_NEW_MAX_LEVEL =                  2000    # Ocurre muy poco
+REWARD_FOR_WIN =                            10000   # Ocurre una vez
+
 class DQN(nn.Module):
     """ Red neuronal que se utilizara para el DDQN.
     obs: esta puede ser modificada para optimizar su uso con el JumpKing
@@ -146,23 +155,27 @@ class DDQNAgent(Agent):
         """Función de recompensa. Se utiliza al entrenar el modelo.
         OBS: esta debe ser modificada hasta optimizar el modelo.
         """
+        reward = 0
 
-        k1 = 50
-        k2 = 10
-        k3 = 5
-        k4 = 1
+        if action == 0 or action == 1: 
+            reward += REWARD_FOR_WALKING
+        else:
+            reward += REWARD_FOR_JUMPING
+
+        delta_height = next_state.height - state.height
+        if delta_height < 0:
+            how_much_down = -1 * delta_height
+            reward += REWARD_FOR_GOING_DOWN * how_much_down
+        else:
+            how_much_up = delta_height
+            reward += REWARD_FOR_GOING_UP * how_much_up
 
         delta_max_height = next_state.max_height - state.max_height
-        delta_height = next_state.height - state.height
+        if delta_max_height > 0:
+            reward += REWARD_FOR_NEW_MAX_HEIGHT * delta_max_height  + STATIC_REWARD_FOR_NEW_MAX_HEIGHT
 
-        if delta_height >= 0:
-            delta_heght_positive = delta_height
-            delta_heght_negative = 0
-        else:
-            delta_heght_positive = 0
-            delta_heght_negative = -1 * delta_height
-
-        reward = k1 * delta_max_height + k2 * delta_heght_positive - k3 * delta_heght_negative - k4
+        if next_state.win:
+            reward += REWARD_FOR_WIN
 
         return reward
 

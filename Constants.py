@@ -9,7 +9,7 @@
     Parametros de depuración y ejecución
 '''
 NO_INTERFACE = True # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
-CSV_COOLDOWN = 500 # Cuantos pasos deben pasar para que volver a escribir en un .csv
+CSV_COOLDOWN = 100  # Cuantos pasos deben pasar para que volver a escribir en un .csv
 
 DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
@@ -17,14 +17,14 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
 '''
     Parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 500   # Número de pasos máximo a simular en un episodio
-NUMBER_OF_EPISODES = 1000 # Número de episodios a simular
-STEPS_PER_SECOND = -1     # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
-                          # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
+STEPS_PER_EPISODE = 1001   # Número de pasos máximo a simular en un episodio
+NUMBER_OF_EPISODES = 30000 # Número de episodios a simular
+STEPS_PER_SECOND = -1      # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+                           # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
 
-ACTION_SPACE_SIZE = 2 + 5*2     # Número de acciones del espacio de acciones
-WALKING_LENGTH = 6              # Por cuantos pasos camina, si es que escogió esa acción
-INCLUDE_VERTICAL_SPACE = False  # ¿Incluir el salto vertical?
+ACTION_SPACE_SIZE = 10           # Número de acciones del espacio de acciones
+WALKING_LENGTH = 10              # Por cuantos pasos camina, si es que escogió esa acción
+INCLUDE_VERTICAL_SPACE = False   # ¿Incluir el salto vertical?
 
 '''     ¡¡ OBSOLETO !!
 # Parametros (o constante?) del espacio de acciones
