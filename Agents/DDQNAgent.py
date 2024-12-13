@@ -88,7 +88,7 @@ class DDQNAgent(Agent):
         self.episode_reward = 0             # Recompensa total del episodio
         self.step_count = 0                 # Cantidad de pasos dados
 
-        self.network_sync_rate = 100        # Cantidad de pasos en los que las redes (policy y target) se sincronizan, esto se podria
+        self.network_sync_rate = 128        # Cantidad de pasos en los que las redes (policy y target) se sincronizan, esto se podria
                                             # Cambiar a 0, para que se sincronizen a cada paso, pero hace que el entrenamiento se 
                                             # Relentice mucho
 
@@ -266,12 +266,11 @@ class DDQNAgent(Agent):
     def end_episode(self):
         """Terminar el episodio, entregar datos de episodio y disminuir epsilon (progresión geometrica)
         """
-        
         # Modificamos el Epsilon
         if (self.is_training):
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
-        print("End Episode, Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
+        print("Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
     def load(self, path):
         """ Cargamos datos de entrenamientos previos. Esto seria:
@@ -311,7 +310,7 @@ class DDQNAgent(Agent):
         """
         # FIXME: Ahora mismo se van a hacer pruebas con estados más pequeños y tontos
         scalar_values = torch.tensor(
-            [state.x, state.y, state.level], 
+            [state.x_normalized, state.y_normalized, state.level_normalized], 
             dtype=torch.float
         ).to(self.device)
         
