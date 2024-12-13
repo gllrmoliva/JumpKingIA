@@ -34,8 +34,10 @@ class State():
     jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
     done : bool = None                                  # Es el ultimo estado del episodio
     win : bool = None                                   # Se llegó al último nivel. Notar que: win = True => done = True
-    level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
-    next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
+
+    if not NO_LEVEL_MATRIX:
+        level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
+        next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
 
     # Atributos privados
     _normalized = False
@@ -63,20 +65,23 @@ class State():
         state.jumpCount = env.game.king.jumpCount
         state.done = env.done
         state.win = env.win
-        state.level_matrix = get_level_matrix(env.game, state.level, debug=True,
-                                              position_rounding=round, thickness_rounding=ceil)
-        if state.level + 1 <= MAX_LEVEL:
-            state.next_level_matrix = get_level_matrix(env.game, state.level + 1,
-                                                       matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
-                                                       matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
-                                                       position_rounding=round, thickness_rounding=ceil,
-                                                       )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
 
-        else:
-            state.next_level_matrix = np.ones((
-                                        NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
-                                        NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
-                                        dtype=np.uint8)
+        if not NO_LEVEL_MATRIX:
+            state.level_matrix = get_level_matrix(env.game, state.level, debug=True,
+                                                position_rounding=round, thickness_rounding=ceil)
+            if state.level + 1 <= GAME_MAX_LEVEL:
+                state.next_level_matrix = get_level_matrix(env.game, state.level + 1,
+                                                        matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                                        matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
+                                                        position_rounding=round, thickness_rounding=ceil,
+                                                        )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+
+            else:
+                state.next_level_matrix = np.ones((
+                                            NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                            NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
+                                            dtype=np.uint8)
+                
         return state
 
     '''
@@ -84,7 +89,7 @@ class State():
     ¡Notar que en este proceso se transforman los valores a float!
     '''
     @property
-    def level_normalized(self): return self.level / MAX_LEVEL
+    def level_normalized(self): return self.level / GAME_MAX_LEVEL
     @property
     def x_normalized(self): return self.x / LEVEL_HORIZONTAL_SIZE
     @property
@@ -165,7 +170,8 @@ class Environment():
 
         self.step_counter += 1
 
-        if self.game.king.levels.current_level == 4:
+        current_level = self.game.king.levels.current_level
+        if current_level == EPISODE_MAX_LEVEL or current_level == GAME_MAX_LEVEL:
             self.done = True
             self.win = True
         elif self.step_counter >= self.steps_per_episode:
