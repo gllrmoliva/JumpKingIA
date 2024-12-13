@@ -6,6 +6,8 @@ import random
 import time
 from pathlib import Path
 
+from Agents.PPOAgent import PPOAgent
+
 import Train
 from Agents.RandomAgent import RandomAgent
 from Agents.LeftRightAgent import LeftRightAgent
@@ -20,29 +22,55 @@ if __name__ == "__main__":
 	#Game = JKGame()
 	#Game.running()
 
-	train = False 
+	train = True
 
-	path = "model_ddqn_episode"
-	ddqn_state_dimension = 3
-	action_space = generate_action_space(num_of_actions=10)
+	# Si se esta probando PPO = True
+	# SI se esta probando DDQN = False
+	PPO = False 
 
-	if (train):
-		t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
-						    		action_dim=len(action_space),
-									is_training=train),
-								action_space=action_space,
-								csv_savepath= path + ".csv",
-								agent_savepath= path + ".pth",
-								)
+	if (PPO):
+		"""PPO"""
+		torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+		""" t = Train.Train(ListAgent(), csv_savepath="test.csv")
+		t.run() """
+		state_dim = 4
+		action_space = generate_action_space(num_of_actions=10)
+		print(action_space)
+
+		agent = PPOAgent(state_dim, len(action_space))
+
+		trainer = Train.Train(agent,
+							action_space=action_space,
+							agent_savepath="model_ppo_episode.pth",
+							csv_savepath="ppo_training.csv")
+		trainer.run()
+		agent.plot()
+
 	else:
-		t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
-						    		action_dim=len(action_space),
-									is_training=train),
-								action_space=action_space,
-								csv_savepath= path + ".csv",
-								agent_loadpath= path + ".pth"
-								)
 
-	#t = Train.Train(RandomAgent(len(action_space)), action_space=action_space, csv_savepath="test.csv")
+		path = "model_ddqn_episode"
+		ddqn_state_dimension = 3
+		action_space = generate_action_space(num_of_actions=10)
 
-	t.run()
+		if (train):
+			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
+						    			action_dim=len(action_space),
+										is_training=train),
+									action_space=action_space,
+									csv_savepath= path + ".csv",
+									agent_savepath= path + ".pth",
+									)
+		else:
+			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
+						    			action_dim=len(action_space),
+										is_training=train),
+									action_space=action_space,
+									csv_savepath= path + ".csv",
+									agent_loadpath= path + ".pth"
+									)
+
+		t.run()
+
+
+	

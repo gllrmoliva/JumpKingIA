@@ -8,6 +8,7 @@
 '''
     Parametros de depuración y ejecución
 '''
+
 NO_INTERFACE = True# Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
 CSV_COOLDOWN = 100  # Cuantos pasos deben pasar para que volver a escribir en un .csv
 

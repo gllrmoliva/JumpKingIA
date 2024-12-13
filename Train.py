@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Tuple
 import ActionSpace
 
+
 '''
 Este archivo tiene la función de generalizar lo que es entrenar un agente,
 con el objetivo de idealmente programar un agente con cierta independencia del resto del programa
@@ -70,6 +71,7 @@ class State():
                                                        matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
                                                        position_rounding=round, thickness_rounding=ceil,
                                                        )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+
         else:
             state.next_level_matrix = np.ones((
                                         NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
