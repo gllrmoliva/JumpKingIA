@@ -14,9 +14,17 @@ class DQN(nn.Module):
 
     def __init__(self, state_dim: int, action_dim: int , hidden_dim = 256):
         super(DQN,self).__init__()
+
+        # Ahora mismo tenemos 4 hidden layers, no nos importa mucho el overfitting
         self.model = nn.Sequential(
                         nn.Linear(state_dim, hidden_dim),
                         nn.ReLU(), 
+                        nn.Linear(hidden_dim, hidden_dim),
+                        nn.ReLU(),
+                        nn.Linear(hidden_dim, hidden_dim),
+                        nn.ReLU(),
+                        nn.Linear(hidden_dim, hidden_dim),
+                        nn.ReLU(),
                         nn.Linear(hidden_dim, hidden_dim),
                         nn.ReLU(),
                         nn.Linear(hidden_dim, action_dim)
@@ -174,7 +182,7 @@ class DDQNAgent(Agent):
         # 1. Calcular Recompensa
         reward = self.calculate_reward(state, action, next_state)
 
-        done = next_state.done
+        done = next_state.win
 
         # Transformamos los estados a tensores
         state_tensor = self.state_to_tensor(state)
@@ -303,7 +311,7 @@ class DDQNAgent(Agent):
         """
         # FIXME: Ahora mismo se van a hacer pruebas con estados más pequeños y tontos
         scalar_values = torch.tensor(
-            [state.x, state.y, state.level, int(state.done)], 
+            [state.x, state.y, state.level], 
             dtype=torch.float
         ).to(self.device)
         
