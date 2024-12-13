@@ -5,6 +5,9 @@ from pathlib import Path
 from Constants import *
 from Matrix import *
 from datetime import datetime
+from typing import Tuple
+import ActionSpace
+
 
 '''
 Este archivo tiene la función de generalizar lo que es entrenar un agente,
@@ -21,7 +24,7 @@ Está clase modela un estado y
 """
 class State():
 
-    # Attributes
+    # Atributos
     level : int = None                                  # Número del nivel actual
     x : int = None                                      # Coordenada x del King. Aumenta de izquierda a derecha
     y : int = None                                      # Coordenada y del King. ¡Aumenta de arriba hacia abajo!
@@ -29,9 +32,13 @@ class State():
     max_height : int = None                             # Altura total máxima alcanzada en el episodio
     max_height_last_step : int = None                   # Altura total máxima alcanzada durante el último paso de juego
     jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
-    done : bool = None                                  # Acabo el episodio
-    #level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
-    #next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
+    done : bool = None                                  # Es el ultimo estado del episodio
+    win : bool = None                                   # Se llegó al último nivel. Notar que: win = True => done = True
+    level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
+    next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
+
+    # Atributos privados
+    _normalized = False
 
     '''
     Busca los valores que describen el estado y los almacena en los atributos
@@ -39,37 +46,58 @@ class State():
         game: instancia de JKGame. Esto es porque es la forma de acceder a variables del repositorio original
     '''                  
     @staticmethod
-    def get_state_from_game(game : JKGame) -> 'State':
+    def get_state_from_env(env: 'Environment') -> 'State':
         state = State()
 
-        state.level = game.king.levels.current_level
+        state.level = env.game.king.levels.current_level
         if DEBUG_OLD_COORDINATE_SYSTEM:
-            state.x = game.king.x + 5 # numero magico
-            state.y = game.king.y + 9 # numero magico
+            state.x = env.game.king.x + 5 # numero magico
+            state.y = env.game.king.y + 9 # numero magico
         else:
-            state.x = round(game.king.rect_x)
-            state.y = round(game.king.rect_y)
+            state.x = round(env.game.king.rect_x)
+            state.y = round(env.game.king.rect_y)
         
-        state.height = game.height
-        state.max_height = game.max_height
-        state.max_height_last_step = game.max_height_last_step
-        state.jumpCount = game.king.jumpCount
-        state.done = game.done
-        '''
-        state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
-        if state.level + 1 <= game.king.levels.max_level:
-            state.next_level_matrix = get_level_matrix(game, state.level + 1,
-                                                    matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
-                                                    matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
-                                                    position_rounding=round, thickness_rounding=ceil,
-                                                    )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+        state.height = env.game.height
+        state.max_height = env.game.max_height
+        state.max_height_last_step = env.game.max_height_last_step
+        state.jumpCount = env.game.king.jumpCount
+        state.done = env.done
+        state.win = env.win
+        state.level_matrix = get_level_matrix(env.game, state.level, debug=True,
+                                              position_rounding=round, thickness_rounding=ceil)
+        if state.level + 1 <= MAX_LEVEL:
+            state.next_level_matrix = get_level_matrix(env.game, state.level + 1,
+                                                       matrix_width=NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
+                                                       matrix_height=2*NEXT_LEVEL_MATRIX_VERTICAL_SIZE,
+                                                       position_rounding=round, thickness_rounding=ceil,
+                                                       )[NEXT_LEVEL_MATRIX_VERTICAL_SIZE : ] # Solamente la mitad de abajo
+
         else:
             state.next_level_matrix = np.ones((
                                         NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
                                         NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
                                         dtype=np.uint8)
-        '''
         return state
+
+    '''
+    ATRIBUTOS NORMALIZADOS: Cuyo valor esta entre 0 y 1
+    ¡Notar que en este proceso se transforman los valores a float!
+    '''
+    @property
+    def level_normalized(self): return self.level / MAX_LEVEL
+    @property
+    def x_normalized(self): return self.x / LEVEL_HORIZONTAL_SIZE
+    @property
+    def y_normalized(self): return self.y / LEVEL_VERTICAL_SIZE
+    @property
+    def height_normalized(self): return self.height / GAME_MAX_HEIGHT
+    @property
+    def max_height_normalized(self): return self.max_height / GAME_MAX_HEIGHT
+    @property
+    def max_height_last_step_normalized(self): return self.max_height_last_step / GAME_MAX_HEIGHT
+    @property
+    def jumpCount_normalized(self): return self.jumpCount / JUMPCOUNT_MAX
+    
 
 '''
 Interfaz que modela un agente.
@@ -103,15 +131,54 @@ Es una clase que 'envuelve' a JKGame para que sus metodos devuelvan los estados 
 '''
 class Environment():
     def __init__(self, steps_per_episode, steps_per_second):
-        self.game = JKGame(steps_per_episode=steps_per_episode, steps_per_seconds=steps_per_second)
+        self.game = JKGame(steps_per_seconds=steps_per_second)
+        self.steps_per_episode = steps_per_episode
+        self.step_counter = 0
+        self.done = False
+        self.win = False
     
     def reset(self):
         self.game.reset()
-        return State.get_state_from_game(self.game)
+        self.step_counter = 0
+        self.done = False
+        self.win = False
+
+        return State.get_state_from_env(self)
 
     def step(self, action):
-        self.game.step(action)
-        return State.get_state_from_game(self.game)
+
+        (elemental_action, repeat, action_name) = action
+
+        for i in range(repeat + 1):
+            if i < repeat:
+                if      elemental_action == ActionSpace.LEFT:           self._elemental_step(ActionSpace.LEFT)
+                elif    elemental_action == ActionSpace.RIGHT:          self._elemental_step(ActionSpace.RIGHT)
+                elif    elemental_action == ActionSpace.SPACE_LEFT:     self._elemental_step(ActionSpace.SPACE)
+                elif    elemental_action == ActionSpace.SPACE_RIGHT:    self._elemental_step(ActionSpace.SPACE)
+                elif    elemental_action == ActionSpace.SPACE:          self._elemental_step(ActionSpace.SPACE)
+            else: # Last repeat
+                if      elemental_action == ActionSpace.LEFT:           break
+                elif    elemental_action == ActionSpace.RIGHT:          break
+                elif    elemental_action == ActionSpace.SPACE_LEFT:     self._elemental_step(ActionSpace.LEFT)
+                elif    elemental_action == ActionSpace.SPACE_RIGHT:    self._elemental_step(ActionSpace.RIGHT)
+                elif    elemental_action == ActionSpace.SPACE:          self._elemental_step(ActionSpace.IDLE)
+
+        self.step_counter += 1
+
+        if self.game.king.levels.current_level == 4:
+            self.done = True
+            self.win = True
+        elif self.step_counter >= self.steps_per_episode:
+            self.done = True
+        else:
+            self.done = False
+
+        return State.get_state_from_env(self)
+    
+    # Método privado, ignorar
+    def _elemental_step(self, elemental_action):
+        self.game.step(elemental_action)
+
 
 '''
 Para iniciar el juego con función de entrenar un agente
@@ -134,19 +201,26 @@ class Train():
                  steps_per_episode=STEPS_PER_EPISODE,
                  number_of_episodes=NUMBER_OF_EPISODES,
                  steps_per_second=STEPS_PER_SECOND,
+                 action_space=None,
                  agent_loadpath=None,
                  agent_savepath=None,
                  csv_agentname="UNNAMED",
                  csv_savepath=None):
         
         self.agent : Agent = agent
+
+        self.env : Environment = Environment(steps_per_episode, steps_per_second)
         self.steps_per_episode = steps_per_episode
         self.numbers_of_episode = number_of_episodes
+
         self.agent_loadpath = agent_loadpath
         self.agent_savepath = agent_savepath
-        self.env : Environment = Environment(self.steps_per_episode, steps_per_second)
+
+        if action_space == None: raise ValueError("Action space needed!")
+        self.action_space : dict[int, Tuple[int, int, str]] = action_space
 
         self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
+        
 
     def run(self):
 
@@ -168,10 +242,10 @@ class Train():
 
                 action = self.agent.select_action(self.state)
 
-                if action not in ACTION_SPACE.keys() : 
+                if action not in self.action_space.keys() : 
                     raise ValueError("Given action not in Action Space!")
 
-                next_state = self.env.step(action)
+                next_state = self.env.step(self.action_space[action])             
 
                 self.agent.train(self.state, action, next_state)
 
@@ -212,6 +286,7 @@ class CSV():
                               'STEP',
                               'DATE',
                               'TIME',
+                              'LEVEL',
                               'HEIGHT',
                               'MAX_HEIGHT',
                               'MAX_HEIGHT_LAST_STEP',
@@ -231,6 +306,7 @@ class CSV():
                    self.train.step,
                    date,
                    time,
+                   self.train.state.level,
                    self.train.state.height,
                    self.train.state.max_height,
                    self.train.state.max_height_last_step,

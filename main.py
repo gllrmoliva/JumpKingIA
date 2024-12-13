@@ -7,7 +7,6 @@ import time
 from pathlib import Path
 
 from Agents.PPOAgent import PPOAgent
-from DDQN import DDQN
 
 import Train
 from Agents.RandomAgent import RandomAgent
@@ -15,59 +14,63 @@ from Agents.LeftRightAgent import LeftRightAgent
 from Agents.ListAgent import ListAgent
 from Agents.DDQNAgent import DDQNAgent
 from Agents.LoadSaveAgent import LoadSaveAgent
+from ActionSpace import generate_action_space
 from JumpKing import JKGame
 from Constants import *
-
-'''
-¡Obsoleto!
-Esta función corresponde el entrenamiento del repositorio original.
-Ya no esta siendo utilizada. Aun así creo que es bueno dejarla por ahora.
-En cambio en Train.py hay una clase Train que pretende generalizar a un Agente con un método cualquiera y añadir funcionalidades.
-'''
-def train():
-	# Funcion para entrenar la IA
-	action_dict = {
-		0: 'right',
-		1: 'left',
-		2: 'right+space',
-		3: 'left+space',
-		# 4: 'space',
-		# 5: 'idle',
-	}
-	agent = DDQN()
-	env = JKGame(steps_per_episode=1000)
-	num_episode = 100000
-
-	for i in range(num_episode):
-		done, state = env.reset()
-
-		running_reward = 0
-		while not done:
-			action = agent.select_action(state)
-			#print(action_dict[action])
-			next_state, reward, done = env.step(action)
-
-			running_reward += reward
-			sign = 1 if done else 0
-			agent.train(state, action, reward, next_state, sign)
-			state = next_state
-		print (f'episode: {i}, reward: {running_reward}')
 
 if __name__ == "__main__":
 	#Game = JKGame()
 	#Game.running()
 
-	#train()
-  
-	torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	train = True
 
-	""" t = Train.Train(ListAgent(), csv_savepath="test.csv")
-	t.run() """
-	state_dim = 4
-	action_dim = 5
-	agent = PPOAgent(state_dim, action_dim)
-	trainer = Train.Train(agent,
-						agent_savepath="model_ppo_episode.pth",
-						csv_savepath="ppo_training.csv")
-	trainer.run()
-	agent.plot()
+	# Si se esta probando PPO = True
+	# SI se esta probando DDQN = False
+	PPO = False 
+
+	if (PPO):
+		"""PPO"""
+		torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+		""" t = Train.Train(ListAgent(), csv_savepath="test.csv")
+		t.run() """
+		state_dim = 4
+		action_space = generate_action_space(num_of_actions=10)
+		print(action_space)
+
+		agent = PPOAgent(state_dim, len(action_space))
+
+		trainer = Train.Train(agent,
+							action_space=action_space,
+							agent_savepath="model_ppo_episode.pth",
+							csv_savepath="ppo_training.csv")
+		trainer.run()
+		agent.plot()
+
+	else:
+
+		path = "model_ddqn_episode"
+		ddqn_state_dimension = 3
+		action_space = generate_action_space(num_of_actions=10)
+
+		if (train):
+			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
+						    			action_dim=len(action_space),
+										is_training=train),
+									action_space=action_space,
+									csv_savepath= path + ".csv",
+									agent_savepath= path + ".pth",
+									)
+		else:
+			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
+						    			action_dim=len(action_space),
+										is_training=train),
+									action_space=action_space,
+									csv_savepath= path + ".csv",
+									agent_loadpath= path + ".pth"
+									)
+
+		t.run()
+
+
+	

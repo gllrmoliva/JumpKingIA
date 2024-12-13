@@ -17,6 +17,8 @@ from Gameplay.Babe_Audio import Babe_Audio
 from Gameplay.King_Particles import King_Particle
 from Constants import NO_INTERFACE
 
+from Constants import NO_INTERFACE
+
 class Babe(King):
 
 	def __init__(self, screen, levels):
@@ -31,7 +33,6 @@ class Babe(King):
 
 			self.screen_width = int(os.environ.get("screen_width"))
 			self.screen_height = int(os.environ.get("screen_height"))
-
 
 		self.sprites = Babe_Sprites().babe_images
 
