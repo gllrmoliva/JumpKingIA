@@ -48,10 +48,10 @@ class DDQNAgent(Agent):
         # Variables de entrenamiento
         self.action_dim = action_dim # FIXME: Esto se va a tener que arreglar dependiendo de cual va a ser el espacio de acciones
         self.epsilon = 1
-        self.epsilon_decay = 0.9995 
-        self.epsilon_min = 0.05
+        self.epsilon_decay = 0.99
+        self.epsilon_min = 0.1
         self.replay_memory_size = 50000
-        self.batch_size = 128 
+        self.batch_size = 64 
         self.episode_reward = 0
         self.step_count = 0
         self.network_sync_rate = 100
@@ -101,6 +101,7 @@ class DDQNAgent(Agent):
 
     # Funcion de recompensa, esto es importante!!!!!
     def calculate_reward(self, state: 'State', action: int, next_state: 'State') -> int:
+        """
         k1 = 50
         k2 = 10
         k3 = 5
@@ -115,15 +116,31 @@ class DDQNAgent(Agent):
             delta_heght_negative = -1 * delta_height
 
         r = k1 * delta_max_height + k2 * delta_heght_positive - k3 * delta_heght_negative - k4
+        """
+        # Objetivo: ir hacia la izquierda
+        left_k = 10
+        right_k = -1
+        delta_x = next_state.x_normalized - state.x_normalized
 
-        return r
+        if delta_x < 0:
+            left_mov = -1 * delta_x
+            right_mov = 0
+        else:
+            left_mov = 0
+            right_mov = delta_x
+
+        reward = left_k * left_mov + right_k * right_mov
+
+        return reward
+  
 
     # Entrena al modelo sabiendo que acción tomó en un estado, y a que otro estado llevó
     # Acá podria por ejemplo: Calcular recompensa, actualizar recompensa acumulada, etc.
     def train(self, state: 'State', action: int, next_state: 'State'):
         reward = self.calculate_reward(state, action, next_state)
+        #print("Recompensa: {}".format(reward))
         self.episode_reward += reward
-        done = next_state.done
+        done = next_state.win
 
         # Transformamos los estados a tensores
         state_tensor = self.state_to_tensor(state)
@@ -132,7 +149,18 @@ class DDQNAgent(Agent):
         # Solo si estamos entrenando utilizamos la memoria
         if self.is_training:
             self.memory.append((state_tensor, action, next_state_tensor, reward, done))
+
             self.step_count += 1
+            # Si suficiente experiencia a sido recolectada
+            if len(self.memory) > self.batch_size:
+                # Sample de memory
+                batch = self.memory.sample(self.batch_size)
+                # Optimize
+                self.optimize(batch, self.policy_dqn, self.target_dqn)
+
+                if self.step_count > self.network_sync_rate:
+                    self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+                    self.step_count = 0
         
     # Se llama cuando acaba el episodio cambiamos el epsilon.
 
@@ -190,16 +218,6 @@ class DDQNAgent(Agent):
             # Al terminar episodio 
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
-            # Si suficiente experiencia a sido recolectada
-            if len(self.memory) > self.batch_size:
-                # Sample de memory
-                batch = self.memory.sample(self.batch_size)
-                # Optimize
-                self.optimize(batch, self.policy_dqn, self.target_dqn)
-
-                if self.step_count > self.network_sync_rate:
-                    self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
-                    self.step_count = 0
 
         print("End Episode, Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
@@ -234,7 +252,7 @@ class DDQNAgent(Agent):
         """
         # FIXME: Ahora mismo se van a hacer pruebas con estados más pequeños y tontos
         scalar_values = torch.tensor(
-            [state.x, state.y, state.level, int(state.done)], 
+            [state.x_normalized, state.y_normalized, state.level_normalized], 
             dtype=torch.float
         ).to(self.device)
         

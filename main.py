@@ -61,19 +61,17 @@ if __name__ == "__main__":
 	#train()
 	path = "model_ddqn_episode"
 
-	action_space = generate_action_space(num_of_actions=12)
+	action_space = generate_action_space(num_of_actions=4)
 
-	'''
-	t = Train.Train(DDQNAgent(	state_dim=4,
+	t = Train.Train(DDQNAgent(	state_dim=3,
 						    	action_dim=len(action_space),
-								is_training=True),
+								is_training=False),
 							action_space=action_space,
 							csv_savepath= path + ".csv",
 							agent_savepath= path + ".pth",
-							#agent_loadpath= path + ".pth"
+							agent_loadpath= path + ".pth"
 							)
-	'''
 
-	t = Train.Train(RandomAgent(len(action_space)), action_space=action_space, csv_savepath="test.csv")
+	# t = Train.Train(RandomAgent(len(action_space)), action_space=action_space, csv_savepath="test.csv")
 
 	t.run()
