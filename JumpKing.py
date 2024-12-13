@@ -50,7 +50,7 @@ class JKGame:
 		steps_per_seconds: Cantidad de 'pasos' de la simulación que se realizan en un segundo
 			-1: Desbloqueado, ejecuta al mayor ritmo que puede.
 	"""
-	def __init__(self, steps_per_episode, steps_per_seconds):
+	def __init__(self, steps_per_seconds):
 
 		# Variables nuevas / modificadas
 
@@ -96,10 +96,6 @@ class JKGame:
 
 		self.start = Start(self.game_screen, self.menus)
 
-		self.step_counter = 0
-		self.max_step = steps_per_episode
-		self.done = False
-
 		self.visited = {}
 
 		self._update_heights()
@@ -122,9 +118,6 @@ class JKGame:
 		os.environ["attempt"] = str(int(os.environ.get("attempt")) + 1)
 		os.environ["session"] = "0"
 
-		self.step_counter = 0
-		self.done = False
-
 		self.visited = {}
 		self.visited[(self.king.levels.current_level, self.king.y)] = 1
 
@@ -142,9 +135,10 @@ class JKGame:
 	def step(self, action):
 		'''Metodo para realizar un paso en el juego,
 		¡Sólo es utilizado para cuando se ejecuta el juego con un agente! En caso de ser un jugador humano se ejectua running()'''
-		old_level = self.king.levels.current_level
-		old_y = self.king.y
-		#old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
+
+		#old_level = self.king.levels.current_level
+		#old_y = self.king.y
+		##old_y = (self.king.levels.max_level - self.king.levels.current_level) * 360 + self.king.y
 
 		self.max_height_last_step = self.height
 
@@ -170,8 +164,6 @@ class JKGame:
 
 			if self.move_available():
 
-				self.step_counter += 1
-
 				##################################################################################################
 				# Define the reward from environment                                                             #
 				##################################################################################################
@@ -186,8 +178,6 @@ class JKGame:
 					reward = -self.visited[(self.king.levels.current_level, self.king.y)]
 				'''
 				####################################################################################################
-
-				self.done = True if self.step_counter > self.max_step else False
 				
 				return
 
