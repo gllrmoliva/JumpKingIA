@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
 		path = "model_ddqn_episode"
 		ddqn_state_dimension = 3
-		action_space = generate_action_space(num_of_actions=10)
+		action_space = generate_action_space(num_of_actions=12)
 
 		if (train):
 			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,

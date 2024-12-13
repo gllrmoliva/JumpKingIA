@@ -9,12 +9,12 @@ from Constants import *
 
 REWARD_FOR_WALKING =                        -2
 REWARD_FOR_JUMPING =                        -5
-REWARD_FOR_GOING_DOWN =                     -3   # Asumiendo una caida promedio de 720, para un total promedio de 50
-REWARD_FOR_GOING_UP =                       5       # Asumiendo una subida promedio de 50 (¡Pero la mayoria de saltos suelen ser caidas!), para un total promedio de 250
+REWARD_FOR_GOING_DOWN =                     -5   # Asumiendo una caida promedio de 720, para un total promedio de 50
+REWARD_FOR_GOING_UP =                        5       # Asumiendo una subida promedio de 50 (¡Pero la mayoria de saltos suelen ser caidas!), para un total promedio de 250
 REWARD_FOR_NEW_MAX_HEIGHT =                 10      # Recompensamos el doble, para un total promedio de 750
 STATIC_REWARD_FOR_NEW_MAX_HEIGHT =          100     # Para un caso borde donde la altura ganada es poca (¡Igual nos interesa premiar!)
 REWARD_FOR_NEW_MAX_LEVEL =                  2000    # Ocurre muy poco
-REWARD_FOR_WIN =                            10000   # Ocurre una vez
+REWARD_FOR_WIN =                            100000   # Ocurre una vez
 
 class DQN(nn.Module):
     """ Red neuronal que se utilizara para el DDQN.
@@ -90,7 +90,7 @@ class DDQNAgent(Agent):
         self.learning_rate_a = 0.01         # Que tan rapido "aprende" el agente
         self.discount_factor_gamma = 0.99   # 
         self.epsilon = 1                    # Epsilon (probabilidad inicial de hacer acciones aleatorias)
-        self.epsilon_decay = 0.9995         # Cuando disminuye por episodio la probabilidad de hacer acciones aleatorias
+        self.epsilon_decay = 0.998          # Cuando disminuye por episodio la probabilidad de hacer acciones aleatorias
         self.epsilon_min = 0.05             # Valor minimo que puede alcanzar el epsilon en el periodo de entramiento
         self.replay_memory_size = 50000     # Tamaño de la Replay Memory
         self.batch_size = 128               # Cantidad de muestras que que extraen del Replay Memory
