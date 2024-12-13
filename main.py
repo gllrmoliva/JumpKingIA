@@ -62,7 +62,7 @@ if __name__ == "__main__":
 	state_dim = 4
 	action_dim = 5
 	agent = PPOAgent(state_dim, action_dim)
-	trainer = Train.Train(agent, agent_loadpath="model_ppo_episode.pth",
+	trainer = Train.Train(agent,
 						agent_savepath="model_ppo_episode.pth",
 						csv_savepath="ppo_training.csv")
 	trainer.run()

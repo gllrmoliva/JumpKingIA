@@ -89,11 +89,11 @@ class PPOAgent(Agent):
         
 
 
-    def select_action(self, level, x, y, jumpCount):
+    def select_action(self, state: State):
         """
         Selecciona una acción basada en el estado actual.
         """
-        state_tensor = torch.FloatTensor([level, x, y, jumpCount]).unsqueeze(0)
+        state_tensor = torch.FloatTensor([state.level, state.x, state.y, state.jumpCount]).unsqueeze(0)
         with torch.no_grad():
             action_probs, _ = self.policy_old(state_tensor)
         
@@ -112,16 +112,14 @@ class PPOAgent(Agent):
         return action
 
     # TODO: Dejé action, pero no se esta usando. Verificar por qué
-    def train(self, action: int, level : int, x : int, y : int, max_height : int,
-              max_height_last_step : int, done : bool, jumpCount : int, next_level : int, next_x : int,
-              next_y : int, next_max_height : int, next_done : bool):
+    def train(self, state: State, action: int, next_state: State):
         """
         Entrena al agente utilizando las transiciones almacenadas.
         """
         # Calcular recompensa y almacenar en memoria
-        reward = self.compute_reward(level, next_level, x, next_x, max_height, next_max_height, max_height_last_step, jumpCount, done, next_done)
+        reward = self.compute_reward(state, action, next_state)
         self.memory.rewards.append(reward)
-        self.memory.is_terminals.append(next_done)
+        self.memory.is_terminals.append(next_state.done)
 
         # Actualizar métricas
         self.current_episode_rewards += reward
@@ -132,7 +130,7 @@ class PPOAgent(Agent):
             logging.info(f"Progreso: Episodio {len(self.total_rewards) + 1}, Pasos: {self.episode_steps}, Recompensa Acumulada: {self.current_episode_rewards:.2f}")
 
         # Si el episodio terminó, realiza la actualización del modelo
-        if next_done:
+        if next_state.done:
             self.update()
             self.total_rewards.append(self.current_episode_rewards)
             logging.info(f"Episodio {len(self.total_rewards)} terminado. Recompensa Total: {self.current_episode_rewards:.2f}, Pasos Totales: {self.episode_steps}")
@@ -144,24 +142,22 @@ class PPOAgent(Agent):
         pass
 
     # TODO: Quizas incluir jump count o max height last step en alguna parte?
-    def compute_reward(self, level : int, next_level : int, x: int , next_x : int, max_height: int,
-                       next_max_height: int, max_height_last_step : int, jumpCount : int,
-                       done : bool, next_done : bool):
+    def compute_reward(self, state: State, action: int, next_state: State):
         """
         Calcula la recompensa basada en el cambio de estado.
         """
-        reward = (next_max_height - max_height) * 10
+        reward = (next_state.max_height - state.max_height) * 10
 
         # Penalizar comportamiento repetitivo
-        if level == next_level and x == next_x:
+        if state.level == next_state.level and state.x == next_state.x:
             reward -= 3  # Penalización por falta de progreso
 
         # Recompensa adicional por terminar con éxito
-        if next_done:
-            reward += 100 if next_max_height > max_height else -50
+        if next_state.done:
+            reward += 100 if next_state.max_height > state.max_height else -50
 
         # Recompensa por avanzar de nivel
-        reward += next_level * 10
+        reward += next_state.level * 10
 
         # Incentivar exploración
         reward += np.random.uniform(-1, 1) * 0.1

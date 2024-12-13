@@ -30,8 +30,8 @@ class State():
     max_height_last_step : int = None                   # Altura total máxima alcanzada durante el último paso de juego
     jumpCount : int = None                              # Cuantos pasos se ha esta 'cargando' el salto
     done : bool = None                                  # Acabo el episodio
-    level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
-    next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
+    #level_matrix : npt.NDArray[np.uint64] = None        # Matriz de colisiones del nivel
+    #next_level_matrix : npt.NDArray[np.uint64] = None   # Matriz de colisiones del nivel siguiente
 
     '''
     Busca los valores que describen el estado y los almacena en los atributos
@@ -55,6 +55,7 @@ class State():
         state.max_height_last_step = game.max_height_last_step
         state.jumpCount = game.king.jumpCount
         state.done = game.done
+        '''
         state.level_matrix = get_level_matrix(game, state.level, debug=True, position_rounding=round, thickness_rounding=ceil)
         if state.level + 1 <= game.king.levels.max_level:
             state.next_level_matrix = get_level_matrix(game, state.level + 1,
@@ -67,6 +68,7 @@ class State():
                                         NEXT_LEVEL_MATRIX_HORIZONTAL_SIZE,
                                         NEXT_LEVEL_MATRIX_VERTICAL_SIZE),
                                         dtype=np.uint8)
+        '''
         return state
 
 '''
@@ -155,51 +157,25 @@ class Train():
         while self.episode <= self.numbers_of_episode:
 
             self.agent.start_episode()
-            
-            '''Entrega de parámetros individuales del estado actual'''
-            self.state_level = self.env.reset().level
-            self.state_x = self.env.reset().x
-            self.state_y = self.env.reset().y
-            self.state_height = self.env.reset().height
-            self.state_max_height = self.env.reset().max_height
-            self.state_max_height_last_step = self.env.reset().max_height_last_step
-            self.state_done = self.env.reset().done
-            self.state_jumpCount = self.env.reset().jumpCount
+
+            self.state = self.env.reset()
 
             self.step = 0
 
-            while not self.state_done:
+            while not self.state.done:
 
                 self.csv.update()
 
-                action = self.agent.select_action(self.state_level, self.state_x, self.state_y, self.state_jumpCount)
+                action = self.agent.select_action(self.state)
 
                 if action not in ACTION_SPACE.keys() : 
                     raise ValueError("Given action not in Action Space!")
 
-                '''Entrega de parámetros individuales del estado siguiente'''
-                self.next_state_level = self.env.step(action).level
-                self.next_state_x = self.env.step(action).x
-                self.next_state_y = self.env.step(action).y
-                self.next_state_height = self.env.step(action).height
-                self.next_state_max_height = self.env.step(action).max_height
-                self.next_state_max_height_last_step = self.env.step(action).max_height_last_step
-                self.next_state_done = self.env.step(action).done
-                self.next_state_jumpCount = self.env.step(action).jumpCount
+                next_state = self.env.step(action)
 
-                self.agent.train(action, self.state_level, self.state_x, self.state_y, self.state_max_height, 
-                                 self.state_max_height_last_step, self.state_done, self.state_jumpCount,
-                                 self.next_state_level, self.next_state_x, self.next_state_y, self.next_state_max_height,
-                                 self.next_state_done)
+                self.agent.train(self.state, action, next_state)
 
-                self.state_level = self.next_state_level
-                self.state_x = self.next_state_x
-                self.state_y = self.next_state_y
-                self.state_height = self.next_state_height
-                self.state_max_height = self.next_state_max_height
-                self.state_max_height_last_step = self.next_state_max_height_last_step
-                self.state_done = self.next_state_done
-                self.state_jumpCount = self.next_state_jumpCount
+                self.state = next_state
 
                 self.step += 1
             
@@ -255,11 +231,11 @@ class CSV():
                    self.train.step,
                    date,
                    time,
-                   self.train.state_height,
-                   self.train.state_max_height,
-                   self.train.state_max_height_last_step,
-                   self.train.state_x,
-                   self.train.state_y]
+                   self.train.state.height,
+                   self.train.state.max_height,
+                   self.train.state.max_height_last_step,
+                   self.train.state.x,
+                   self.train.state.y]
 
             self.writer.writerow(row)
 
