@@ -163,7 +163,7 @@ class Environment():
 
         self.step_counter += 1
 
-        if self.game.king.levels.current_level == MAX_LEVEL:
+        if self.game.king.levels.current_level == 4:
             self.done = True
             self.win = True
         elif self.step_counter >= self.steps_per_episode:

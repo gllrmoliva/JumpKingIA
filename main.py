@@ -20,7 +20,7 @@ if __name__ == "__main__":
 	#Game = JKGame()
 	#Game.running()
 
-	train = True
+	train = False 
 
 	path = "model_ddqn_episode"
 	ddqn_state_dimension = 3
