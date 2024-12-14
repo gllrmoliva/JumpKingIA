@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Ingorar archivos de guardado
+PPO/*
+Saves/*
+permanent.dat
+save.dat
+settings.dat
+
 # C extensions
 *.so
 
