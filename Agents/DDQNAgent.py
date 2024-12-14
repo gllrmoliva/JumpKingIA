@@ -174,6 +174,10 @@ class DDQNAgent(Agent):
         if delta_max_height > 0:
             reward += REWARD_FOR_NEW_MAX_HEIGHT * delta_max_height  + STATIC_REWARD_FOR_NEW_MAX_HEIGHT
 
+        delta_max_level = next_state.max_level - state.max_level
+        if delta_max_level > 0:
+            reward += REWARD_FOR_NEW_MAX_LEVEL * delta_max_level
+
         if next_state.win:
             reward += REWARD_FOR_WIN
 

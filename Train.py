@@ -25,7 +25,8 @@ Está clase modela un estado y
 class State():
 
     # Atributos
-    level : int = None                                  # Número del nivel actual
+    level : int = None                                  # Número del nivel actual. Desde 0 a 42
+    max_level: int = None                               # Nivel máximo alcanzado en el episodio. Desde 0 a 42
     x : int = None                                      # Coordenada x del King. Aumenta de izquierda a derecha
     y : int = None                                      # Coordenada y del King. ¡Aumenta de arriba hacia abajo!
     height : int = None                                 # Altura total del King, incluyendo niveles anteriores. ¡Aumenta de abajo hacia arriba!
@@ -52,6 +53,8 @@ class State():
         state = State()
 
         state.level = env.game.king.levels.current_level
+        state.max_level = env.max_level
+
         if DEBUG_OLD_COORDINATE_SYSTEM:
             state.x = env.game.king.x + 5 # numero magico
             state.y = env.game.king.y + 9 # numero magico
@@ -90,6 +93,8 @@ class State():
     '''
     @property
     def level_normalized(self): return self.level / GAME_MAX_LEVEL
+    @property
+    def max_level_normalized(self): return self.max_level / GAME_MAX_LEVEL
     @property
     def x_normalized(self): return self.x / LEVEL_HORIZONTAL_SIZE
     @property
@@ -139,12 +144,14 @@ class Environment():
         self.game = JKGame(steps_per_seconds=steps_per_second)
         self.steps_per_episode = steps_per_episode
         self.step_counter = 0
+        self.max_level = 0
         self.done = False
         self.win = False
     
     def reset(self):
         self.game.reset()
         self.step_counter = 0
+        self.max_level = 0
         self.done = False
         self.win = False
 
@@ -178,6 +185,8 @@ class Environment():
             self.done = True
         else:
             self.done = False
+
+        if self.max_level < current_level: self.max_level = current_level
 
         return State.get_state_from_env(self)
     
@@ -293,6 +302,7 @@ class CSV():
                               'DATE',
                               'TIME',
                               'LEVEL',
+                              'MAX_LEVEL',
                               'HEIGHT',
                               'MAX_HEIGHT',
                               'MAX_HEIGHT_LAST_STEP',
@@ -313,6 +323,7 @@ class CSV():
                    date,
                    time,
                    self.train.state.level,
+                   self.train.state.max_level,
                    self.train.state.height,
                    self.train.state.max_height,
                    self.train.state.max_height_last_step,
