@@ -242,7 +242,7 @@ class Train():
 
         self.episode = 1
         
-        if self.agent_loadpath != None: self.agent.load(str(Path(self.agent_loadpath)))
+        if self.agent_loadpath != None: self.agent.load(str(Path(self.agent_loadpath + ".pth")))
 
         while self.episode <= self.numbers_of_episode:
 
