@@ -24,13 +24,9 @@ class MetricsPlotter:
 
     def plot_all(self):
         """
-        Genera todos los gráficos juntos en una sola figura con subplots y muestra los valores en puntos específicos.
+        Genera todos los gráficos en ventanas separadas.
         """
         df = pd.DataFrame(self.metrics)
-
-        # Crear una figura con 2x2 subplots
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        fig.suptitle("Training Metrics", fontsize=16)
 
         # Función para agregar anotaciones en los puntos
         def annotate_points(ax, x, y):
@@ -39,44 +35,50 @@ class MetricsPlotter:
                     ax.annotate(f"{y[i]:.2f}", (x[i], y[i]), textcoords="offset points", xytext=(0, 5), ha="center")
 
         # Gráfico 1: Recompensa total por episodio
-        axes[0, 0].plot(df["episode"], df["total_reward"], label="Total Reward", color="blue")
-        annotate_points(axes[0, 0], df["episode"], df["total_reward"])
-        axes[0, 0].set_title("Reward Per Episode")
-        axes[0, 0].set_xlabel("Episode")
-        axes[0, 0].set_ylabel("Total Reward")
-        axes[0, 0].legend()
-
-        # Gráfico 2: Pérdida promedio
-        axes[0, 1].plot(df["episode"], df["loss"], label="Loss", color="red")
-        annotate_points(axes[0, 1], df["episode"], df["loss"])
-        axes[0, 1].set_title("Loss Per Episode")
-        axes[0, 1].set_xlabel("Episode")
-        axes[0, 1].set_ylabel("Loss")
-        axes[0, 1].legend()
-
-        # Gráfico 3: Gradientes promedio
-        axes[1, 0].plot(df["episode"], df["mean_gradients"], label="Mean Gradients", color="green")
-        annotate_points(axes[1, 0], df["episode"], df["mean_gradients"])
-        axes[1, 0].set_title("Mean Gradients Per Episode")
-        axes[1, 0].set_xlabel("Episode")
-        axes[1, 0].set_ylabel("Gradients")
-        axes[1, 0].legend()
-
-        # Gráfico 4: Entropía promedio
-        axes[1, 1].plot(df["episode"], df["entropy"], label="Entropy", color="purple")
-        annotate_points(axes[1, 1], df["episode"], df["entropy"])
-        axes[1, 1].set_title("Entropy Per Episode")
-        axes[1, 1].set_xlabel("Episode")
-        axes[1, 1].set_ylabel("Entropy")
-        axes[1, 1].legend()
-
-        # Ajustar espaciado entre subplots
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-
-        # Mostrar figura
+        plt.figure(figsize=(8, 6))
+        plt.plot(df["episode"], df["total_reward"], label="Total Reward", color="blue")
+        annotate_points(plt.gca(), df["episode"], df["total_reward"])
+        # Mostrar el valor máximo en el gráfico
+        max_reward = max(df["total_reward"])
+        max_index = df["total_reward"].idxmax()
+        plt.annotate(f"Max: {max_reward:.2f}", 
+                     (df["episode"][max_index], max_reward), 
+                     textcoords="offset points", xytext=(0, 10), ha="center", color="red")
+        plt.title("Reward Per Episode")
+        plt.xlabel("Episode")
+        plt.ylabel("Total Reward")
+        plt.legend()
         plt.show()
 
+        # Gráfico 2: Pérdida promedio
+        plt.figure(figsize=(8, 6))
+        plt.plot(df["episode"], df["loss"], label="Loss", color="red")
+        annotate_points(plt.gca(), df["episode"], df["loss"])
+        plt.title("Loss Per Episode")
+        plt.xlabel("Episode")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.show()
 
+        # Gráfico 3: Gradientes promedio
+        plt.figure(figsize=(8, 6))
+        plt.plot(df["episode"], df["mean_gradients"], label="Mean Gradients", color="green")
+        annotate_points(plt.gca(), df["episode"], df["mean_gradients"])
+        plt.title("Mean Gradients Per Episode")
+        plt.xlabel("Episode")
+        plt.ylabel("Gradients")
+        plt.legend()
+        plt.show()
+
+        # Gráfico 4: Entropía promedio
+        plt.figure(figsize=(8, 6))
+        plt.plot(df["episode"], df["entropy"], label="Entropy", color="purple")
+        annotate_points(plt.gca(), df["episode"], df["entropy"])
+        plt.title("Entropy Per Episode")
+        plt.xlabel("Episode")
+        plt.ylabel("Entropy")
+        plt.legend()
+        plt.show()
 
     def plot_action_probabilities(self, action_probs):
         """

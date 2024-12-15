@@ -275,7 +275,7 @@ class PPOAgent(Agent):
         self.policy.load_state_dict(checkpoint['policy_state_dict'])
         self.policy_old.load_state_dict(checkpoint['policy_old_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.epsilon = 0.1
+        self.epsilon = checkpoint['epsilon']
         self.memory = checkpoint['memory']  # Esto se puede ajustar según cómo se gestione la memoria
         logging.info(f"Modelo cargado desde {path}")
 
