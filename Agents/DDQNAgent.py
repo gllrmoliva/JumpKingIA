@@ -105,17 +105,15 @@ class DDQNAgent(Agent):
         self.optimizer = None               # NN Optimizer. 
 
         self.policy_dqn = DQN(state_dim, action_dim).to(self.device)    # Red Policy (red a la que se le hacen las consultas)
+        self.memory = ReplayMemory(self.replay_memory_size)                 # Generamos la deque ReplayMemory
 
-        # Si Entrenamos: 
+        self.target_dqn = DQN(state_dim, action_dim).to(self.device)        # Generamos la red objetivo (hacia donde quiere ir la policy)
+        self.target_dqn.load_state_dict(self.policy_dqn.state_dict())       # Copiamos Policy en target
+
+        self.optimizer = torch.optim.Adam(self.policy_dqn.parameters(),     # Cargamos optimizador de Pytorch (Magia o Matemática¿?)
+                                            lr = self.learning_rate_a)
         if self.is_training:
-            self.memory = ReplayMemory(self.replay_memory_size)                 # Generamos la deque ReplayMemory
-
-            self.target_dqn = DQN(state_dim, action_dim).to(self.device)        # Generamos la red objetivo (hacia donde quiere ir la policy)
-            self.target_dqn.load_state_dict(self.policy_dqn.state_dict())       # Copiamos Policy en target
-
-            self.optimizer = torch.optim.Adam(self.policy_dqn.parameters(),     # Cargamos optimizador de Pytorch (Magia o Matemática¿?)
-                                               lr = self.learning_rate_a)
-        # Si no entrenamos
+            pass
         else: 
             self.epsilon = 0
             self.epsilon_decay = 1
@@ -174,9 +172,11 @@ class DDQNAgent(Agent):
         if delta_max_height > 0:
             reward += REWARD_FOR_NEW_MAX_HEIGHT * delta_max_height  + STATIC_REWARD_FOR_NEW_MAX_HEIGHT
 
+        """
         delta_max_level = next_state.max_level - state.max_level
         if delta_max_level > 0:
             reward += REWARD_FOR_NEW_MAX_LEVEL * delta_max_level
+        """
 
         if next_state.win:
             reward += REWARD_FOR_WIN
@@ -208,26 +208,24 @@ class DDQNAgent(Agent):
         # 2.  
         # Se mejora la red con back propagation, esto igualmente se puede cambiar a END_EPISODE si se quiere hacer
         # de forma menos recurrente, OJO: Ahora los episodios deberias ser más o menos lentos
-        if self.is_training:
+        # 2.a
+        self.memory.append((state_tensor, action, next_state_tensor, reward, done))
+        self.step_count += 1
 
-            # 2.a
-            self.memory.append((state_tensor, action, next_state_tensor, reward, done))
-            self.step_count += 1
+        # Si suficiente experiencia a sido recolectada
+        # 2.b
+        if len(self.memory) > self.batch_size:
 
-           # Si suficiente experiencia a sido recolectada
-           # 2.b
-            if len(self.memory) > self.batch_size:
+            # Sample de memory
+            batch = self.memory.sample(self.batch_size)
 
-                # Sample de memory
-                batch = self.memory.sample(self.batch_size)
+            # Optimize
+            self.optimize(batch, self.policy_dqn, self.target_dqn)
 
-                # Optimize
-                self.optimize(batch, self.policy_dqn, self.target_dqn)
-
-                # Sincronizar Redes
-                if self.step_count > self.network_sync_rate:
-                    self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
-                    self.step_count = 0
+            # Sincronizar Redes
+            if self.step_count > self.network_sync_rate:
+                self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+                self.step_count = 0
 
         # Sumamos recompensa actual a episodio
         self.episode_reward += reward
@@ -286,6 +284,9 @@ class DDQNAgent(Agent):
         # Modificamos el Epsilon
         if (self.is_training):
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        else:
+            self.epsilon = 0
+
 
         print("Current epsilon: {epsilon} ,Acumulative reward: {reward}".format(reward = self.episode_reward, epsilon = self.epsilon))
 
@@ -300,10 +301,20 @@ class DDQNAgent(Agent):
         # Cargar los parámetros del modelo y el optimizador
         self.policy_dqn.load_state_dict(checkpoint['policy_dqn_state_dict'])
 
+        self.target_dqn.load_state_dict(checkpoint['target_dqn_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.epsilon = checkpoint['epsilon']
+
         if (self.is_training):
-            self.target_dqn.load_state_dict(checkpoint['target_dqn_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.epsilon = checkpoint['epsilon']
+            self.policy_dqn.model.train()
+            self.target_dqn.model.train()
+        else:
+            self.policy_dqn.model.eval()
+            self.target_dqn.model.eval()
+
+            self.epsilon = 0
+            self.epsilon_decay = 1
+            self.epsilon_min = 0
 
         print(f"Modelo cargado desde {path}")
 
