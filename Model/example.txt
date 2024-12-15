@@ -1,1 +1,0 @@
-Ignorar. Archivo sólo para crear la carpeta en el commit jeje

@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import random
-import time
 from pathlib import Path
 
 from Agents.PPOAgent import PPOAgent
@@ -22,7 +20,7 @@ if __name__ == "__main__":
 	#Game = JKGame()
 	#Game.running()
 
-	train = True
+	train = False 
 
 	# Si se esta probando PPO = True
 	# SI se esta probando DDQN = False
@@ -48,29 +46,31 @@ if __name__ == "__main__":
 		agent.plot()
 
 	else:
-
+		action_space = generate_action_space(12)
+		state_dimension = 3
 		path = "Model/model_ddqn_episode"
-		ddqn_state_dimension = 3
-		action_space = generate_action_space(num_of_actions=12)
 
+		
 		if (train):
-			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
-						    			action_dim=len(action_space),
-										is_training=train),
-									action_space=action_space,
-									csv_savepath= path,			# Ya no hace falta colocar la extensión
-									agent_savepath= path,		# Ya no hace falta colocar la extensión
-									)
+			t = Train.Train(DDQNAgent(state_size=state_dimension,
+						    	action_size=len(action_space)),
+						action_space=action_space,
+						csv_savepath= path,
+						agent_savepath= path)
 		else:
-			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
-						    			action_dim=len(action_space),
-										is_training=train),
-									action_space=action_space,
-									csv_savepath= path,			# Ya no hace falta colocar la extensión
-									agent_loadpath= path		# Ya no hace falta colocar la extensión
-									)
+			load_path = "Model/model_ddqn_episode"
+			t = Train.Train(DDQNAgent(state_size=state_dimension,
+						    	action_size=len(action_space),
+                            	lr=0,
+                            	epsilon_start=0,
+                            	epsilon_decay=1,
+                            	epsilon_end=0),
+						action_space=action_space,
+						agent_loadpath= load_path,
+						csv_savepath= path,
+						)
 
-		t.run()
+	t.run()
 
 
 	
