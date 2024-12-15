@@ -29,25 +29,35 @@ class JumpKingEnv(gym.Env):
             dtype=np.float32
         )
         self.total_rewards = total_rewards
+        self.max_height = 0
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         state = self.env.reset()
         observation = self._state_to_observation(state)
+        self.max_height = 0
         return observation, {}
     
     def step(self, action):
         action_tuple = self._action_to_tuple(action)
-        next_state = self.env.step(action_tuple)
+        self.state = State.get_state_from_env(self.env)
+        self.next_state = self.env.step(action_tuple)
 
-        # Calcular recompensa (ejemplo)
-        self.reward = next_state.height - self.env.game.max_height_last_step
+        # Recompensa por altura
+        delta_altura = self.next_state.height - self.state.height
+        if delta_altura > 0:
+            self.reward = delta_altura 
+        else:
+            self.reward = delta_altura * 1.5
+        
+        # Penalización por quedarse en el mismo lugar
+        self.reward -= 0.5 if self.next_state.x == self.state.x else 0
 
-        self.reward += 10 if next_state.level > self.env.game.levels.current_level else 0
-        done = next_state.done
+        self.reward += 100 if self.next_state.level > self.state.level else 0
+        done = self.next_state.done
 
-        observation = self._state_to_observation(next_state)
-
+        observation = self._state_to_observation(self.next_state)
+        self.max_height = self.max_height 
         self.total_rewards.append(self.reward)
         return observation, self.reward, done, False, {}
     
@@ -71,7 +81,7 @@ class JumpKingEnv(gym.Env):
             self.env.game.render()
 
 
-models_dir = f"PPO/models/PPO-{int(time.time())}"
+models_dir = f"PPO/models"
 logdir = f"PPO/logs/PPO-{int(time.time())}"
 writer = tf.summary.create_file_writer(logdir)
 total_rewards = []
@@ -82,6 +92,17 @@ if not os.path.exists(models_dir):
 if not os.path.exists(logdir):
     os.makedirs(logdir)
 env = JumpKingEnv(total_rewards=total_rewards)
+# Verificar si existe un modelo previamente entrenado
+if os.path.exists(models_dir) and len(os.listdir(models_dir)) > 0:
+    # Obtener el modelo más reciente guardado
+    saved_models = sorted(os.listdir(models_dir), key=lambda x: int(x.split("_")[0]))
+    latest_model_path = os.path.join(models_dir, saved_models[-1])
+    print(f"Cargando modelo previamente entrenado: {latest_model_path}")
+    model = PPO.load(latest_model_path, env=env, tensorboard_log=logdir)
+else:
+    print("No se encontró ningún modelo entrenado. Creando uno nuevo.")
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=logdir)
+
 check_env(env)  # Asegúrate de que el entorno cumple con la API
 model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=logdir)
 
@@ -92,6 +113,7 @@ for i in range(NUMBER_OF_EPISODES):
         reward = env.reward  # Recompensa acumulada o actual del episodio
         tf.summary.scalar("Reward", total_rewards[-1], step=i)
         tf.summary.scalar("Episode", i, step=i)
+        tf.summary.scalar("Altura", env.max_height, step=i)
 
     model.save(f"{models_dir}/{STEPS_PER_EPISODE*i}_Steps")
 
