@@ -90,7 +90,7 @@ for i in range(NUMBER_OF_EPISODES):
     
     with writer.as_default():
         reward = env.reward  # Recompensa acumulada o actual del episodio
-        tf.summary.scalar("Reward", total_rewards, step=i)
+        tf.summary.scalar("Reward", total_rewards[-1], step=i)
         tf.summary.scalar("Episode", i, step=i)
 
     model.save(f"{models_dir}/{STEPS_PER_EPISODE*i}_Steps")
