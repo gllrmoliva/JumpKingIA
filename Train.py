@@ -230,11 +230,12 @@ class Train():
 
         self.agent_loadpath = agent_loadpath
         self.agent_savepath = agent_savepath
+        self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
 
         if action_space == None: raise ValueError("Action space needed!")
         self.action_space : dict[int, Tuple[int, int, str]] = action_space
 
-        self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
+        
         
 
     def run(self):
@@ -246,9 +247,7 @@ class Train():
         while self.episode <= self.numbers_of_episode:
 
             self.agent.start_episode()
-
             self.state = self.env.reset()
-
             self.step = 0
 
             while not self.state.done:
@@ -256,25 +255,21 @@ class Train():
                 self.csv.update()
 
                 action = self.agent.select_action(self.state)
-
                 if action not in self.action_space.keys() : 
                     raise ValueError("Given action not in Action Space!")
-
                 next_state = self.env.step(self.action_space[action])             
-
                 self.agent.train(self.state, action, next_state)
-
                 self.state = next_state
 
                 self.step += 1
             
             self.agent.end_episode()
 
-            if self.agent_savepath != None: self.agent.save(str(Path(self.agent_savepath)))
+            if self.episode % SAVE_COOLDOWN == 0:
+                if self.agent_savepath != None: self.agent.save(str(Path(self.agent_savepath + f"_{self.episode}.pth")))
 
             print("Episodio {} Terminado\n".format(self.episode))
             self.episode += 1
-
         
         self.csv.end()
 
@@ -290,7 +285,7 @@ Clase para separar la lógica de la generación de CSV
 class CSV():
     def __init__(self, agentname, savepath, train : Train):
         self.agentname = agentname
-        self.path = str(Path(savepath))
+        self.path = str(Path(savepath+".csv"))
         self.train = train
         
         self.file = open(self.path, mode='w', newline='')

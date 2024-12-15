@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
 	else:
 
-		path = "model_ddqn_episode"
+		path = "Model/model_ddqn_episode"
 		ddqn_state_dimension = 3
 		action_space = generate_action_space(num_of_actions=12)
 
@@ -58,16 +58,16 @@ if __name__ == "__main__":
 						    			action_dim=len(action_space),
 										is_training=train),
 									action_space=action_space,
-									csv_savepath= path + ".csv",
-									agent_savepath= path + ".pth",
+									csv_savepath= path,			# Ya no hace falta colocar la extensión
+									agent_savepath= path,		# Ya no hace falta colocar la extensión
 									)
 		else:
 			t = Train.Train(DDQNAgent(	state_dim=ddqn_state_dimension,
 						    			action_dim=len(action_space),
 										is_training=train),
 									action_space=action_space,
-									csv_savepath= path + ".csv",
-									agent_loadpath= path + ".pth"
+									csv_savepath= path,			# Ya no hace falta colocar la extensión
+									agent_loadpath= path		# Ya no hace falta colocar la extensión
 									)
 
 		t.run()
