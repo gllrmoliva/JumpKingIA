@@ -1,8 +1,4 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from pathlib import Path
 import argparse
 
 from Agents.PPOAgent import PPOAgent
@@ -55,12 +51,15 @@ if __name__ == "__main__":
         # Definición del agente PPO
         state_dim = 5
         action_space = generate_action_space(num_of_actions=10)
-        agent = PPOAgent(state_dim, len(action_space))
 
-        trainer = Train.Train(
-        agent,
-        action_space=action_space,
-        agent_savepath=path if train_mode else None,
+        if train_mode:
+            agent = PPOAgent(state_dim, len(action_space))
+        else:
+            agent = PPOAgent(state_dim, len(action_space), lr=0)
+
+        trainer = Train.Train(agent,
+        action_space=action_space, 
+        agent_savepath=path if train_mode else None, 
         agent_loadpath=None if train_mode else load_path,
         csv_savepath=path
         )
