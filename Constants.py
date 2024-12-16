@@ -9,8 +9,9 @@
     Parametros de depuración y ejecución
 '''
 
-NO_INTERFACE = True # Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
-CSV_COOLDOWN = 100  # Cuantos pasos deben pasar para que volver a escribir en un .csv
+NO_INTERFACE = False# Desactiva el salida gráfica (y en un futuro quizas la auditiva) para acelerar la simluación ¡Falta verificar que no da fallos! ¡Inseguro!
+CSV_COOLDOWN = 10   # Cuantos pasos deben pasar para volver a escribir en el .csv
+SAVE_COOLDOWN = 100 # Cada cuantos episodios se guardan copias del modelo
 
 DEBUG_LEVEL_MATRIX = False # Imprime la matriz del nivel en una ventana aparte ¡Ralentiza mucho el programa!
 DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la misma manera que el repositorio original
@@ -18,14 +19,16 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
 '''
     Parametros de entrenamiento (Modificable)
 '''
-STEPS_PER_EPISODE = 1000   # Número de pasos máximo a simular en un episodio
-NUMBER_OF_EPISODES = 1000 # Número de episodios a simular
-STEPS_PER_SECOND = -1      # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+
+STEPS_PER_EPISODE = 512   # Número de pasos máximo a simular en un episodio
+NUMBER_OF_EPISODES = 50000 # Número de episodios a simular
+STEPS_PER_SECOND = 60      # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+
                            # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
 
 NO_LEVEL_MATRIX = True      # Desactiva la creación de la matriz del nivel ¡Por lo tanto un agente no puede utilizarla!
 
-EPISODE_MAX_LEVEL = 42      # Si queremos mover al 'nivel final' del episodio a un nivel anterior en particular. Colocar un valor entre 0 y 42
+EPISODE_MAX_LEVEL = 5       # Si queremos mover al 'nivel final' del episodio a un nivel anterior en particular. Colocar un valor entre 0 y 42
 
 ACTION_SPACE_SIZE = 10           # Número de acciones del espacio de acciones
 WALKING_LENGTH = 10              # Por cuantos pasos camina, si es que escogió esa acción

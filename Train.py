@@ -25,7 +25,8 @@ Está clase modela un estado y
 class State():
 
     # Atributos
-    level : int = None                                  # Número del nivel actual
+    level : int = None                                  # Número del nivel actual. Desde 0 a 42
+    max_level: int = None                               # Nivel máximo alcanzado en el episodio. Desde 0 a 42
     x : int = None                                      # Coordenada x del King. Aumenta de izquierda a derecha
     y : int = None                                      # Coordenada y del King. ¡Aumenta de arriba hacia abajo!
     height : int = None                                 # Altura total del King, incluyendo niveles anteriores. ¡Aumenta de abajo hacia arriba!
@@ -52,6 +53,8 @@ class State():
         state = State()
 
         state.level = env.game.king.levels.current_level
+        state.max_level = env.max_level
+
         if DEBUG_OLD_COORDINATE_SYSTEM:
             state.x = env.game.king.x + 5 # numero magico
             state.y = env.game.king.y + 9 # numero magico
@@ -90,6 +93,8 @@ class State():
     '''
     @property
     def level_normalized(self): return self.level / GAME_MAX_LEVEL
+    @property
+    def max_level_normalized(self): return self.max_level / GAME_MAX_LEVEL
     @property
     def x_normalized(self): return self.x / LEVEL_HORIZONTAL_SIZE
     @property
@@ -139,12 +144,14 @@ class Environment():
         self.game = JKGame(steps_per_seconds=steps_per_second)
         self.steps_per_episode = steps_per_episode
         self.step_counter = 0
+        self.max_level = 0
         self.done = False
         self.win = False
     
     def reset(self):
         self.game.reset()
         self.step_counter = 0
+        self.max_level = 0
         self.done = False
         self.win = False
 
@@ -178,6 +185,8 @@ class Environment():
             self.done = True
         else:
             self.done = False
+
+        if self.max_level < current_level: self.max_level = current_level
 
         return State.get_state_from_env(self)
     
@@ -221,25 +230,24 @@ class Train():
 
         self.agent_loadpath = agent_loadpath
         self.agent_savepath = agent_savepath
+        self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
 
         if action_space == None: raise ValueError("Action space needed!")
         self.action_space : dict[int, Tuple[int, int, str]] = action_space
 
-        self.csv : CSV = CSV(csv_agentname, csv_savepath, self)
+        
         
 
     def run(self):
 
         self.episode = 1
         
-        if self.agent_loadpath != None: self.agent.load(str(Path(self.agent_loadpath)))
+        if self.agent_loadpath != None: self.agent.load(str(Path(self.agent_loadpath + ".pth")))
 
         while self.episode <= self.numbers_of_episode:
 
             self.agent.start_episode()
-
             self.state = self.env.reset()
-
             self.step = 0
 
             while not self.state.done:
@@ -247,25 +255,21 @@ class Train():
                 self.csv.update()
 
                 action = self.agent.select_action(self.state)
-
                 if action not in self.action_space.keys() : 
                     raise ValueError("Given action not in Action Space!")
-
                 next_state = self.env.step(self.action_space[action])             
-
                 self.agent.train(self.state, action, next_state)
-
                 self.state = next_state
 
                 self.step += 1
             
             self.agent.end_episode()
 
-            if self.agent_savepath != None: self.agent.save(str(Path(self.agent_savepath)))
+            if self.episode % SAVE_COOLDOWN == 0:
+                if self.agent_savepath != None: self.agent.save(str(Path(self.agent_savepath + f"_{self.episode}.pth")))
 
             print("Episodio {} Terminado\n".format(self.episode))
             self.episode += 1
-
         
         self.csv.end()
 
@@ -281,7 +285,7 @@ Clase para separar la lógica de la generación de CSV
 class CSV():
     def __init__(self, agentname, savepath, train : Train):
         self.agentname = agentname
-        self.path = str(Path(savepath))
+        self.path = str(Path(savepath+".csv"))
         self.train = train
         
         self.file = open(self.path, mode='w', newline='')
@@ -293,6 +297,7 @@ class CSV():
                               'DATE',
                               'TIME',
                               'LEVEL',
+                              'MAX_LEVEL',
                               'HEIGHT',
                               'MAX_HEIGHT',
                               'MAX_HEIGHT_LAST_STEP',
@@ -313,6 +318,7 @@ class CSV():
                    date,
                    time,
                    self.train.state.level,
+                   self.train.state.max_level,
                    self.train.state.height,
                    self.train.state.max_height,
                    self.train.state.max_height_last_step,
