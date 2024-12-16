@@ -15,6 +15,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class PPOMemory:
     def __init__(self, batch_size):
+        """
+        Inicializa la memoria de PPO, que almacena estados, acciones, probabilidades,
+        valores, recompensas y estados de finalización.
+        
+        Parámetros:
+            batch_size (int): Tamaño del lote para el entrenamiento por batch.
+        """
         self.states = []
         self.probs = []
         self.vals = []
@@ -25,6 +32,13 @@ class PPOMemory:
         self.batch_size = batch_size
 
     def generate_batches(self):
+        """
+        Genera lotes de índices random para entrenar las redes.
+        
+        Retorno:
+            tuple: Arrays de estados, acciones, probabilidades, valores, recompensas,
+                   estados 'done', y los índices divididos en lotes.
+        """
         n_states = len(self.states)
         batch_start = np.arange(0, n_states, self.batch_size)
         indices = np.arange(n_states, dtype=np.int64)
@@ -40,6 +54,9 @@ class PPOMemory:
                 batches
     
     def store_memory(self, state, action, probs, vals, reward, done):
+        """
+        Almacena una transición de experiencia en la memoria.
+        """
         self.states.append(state)
         self.actions.append(action)
         self.probs.append(probs)
@@ -48,6 +65,9 @@ class PPOMemory:
         self.dones.append(done)
     
     def clear_memory(self):
+        """
+        Limpia la memoria después de cada actualización.
+        """
         self.states = []
         self.probs = []
         self.vals = []
@@ -58,6 +78,16 @@ class PPOMemory:
 
 class ActorNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, alpha, hidden_dim=256, chkpt_dir='tmp/ppo'):
+        """
+        Inicializa la red del actor que predice distribuciones de políticas.
+        
+        Parámetros:
+            state_dim (int): Dimensión del espacio de estados.
+            action_dim (int): Dimensión del espacio de acciones.
+            alpha (float): Tasa de aprendizaje.
+            hidden_dim (int): Tamaño de las capas ocultas.
+            chkpt_dir (str): Directorio donde se guardan los checkpoints.
+        """
         super(ActorNetwork, self).__init__()
         
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_torch_ppo')
@@ -75,20 +105,39 @@ class ActorNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state):
+        """
+        Pasa un estado a través de la red para obtener la distribución de acciones.
+        """
         dist = self.actor(state)
         dist = Categorical(dist)
         return dist
     
     def save_checkpoint(self):
+        """
+        Guarda los pesos del modelo.
+        """
         logging.info('Guardando modelo...')
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
+        """
+        Carga los pesos del modelo desde un archivo.
+        """
         logging.info('Cargando modelo...')
         self.load_state_dict(T.load(self.checkpoint_file))
 
+
 class CriticNetwork(nn.Module):
     def __init__(self, state_dim, alpha, hidden_dim=256, chkpt_dir='tmp/ppo'):
+        """
+        Inicializa la red del crítico que predice el valor de un estado dado.
+        
+        Parámetros:
+            state_dim (int): Dimensión del espacio de estados.
+            alpha (float): Tasa de aprendizaje.
+            hidden_dim (int): Tamaño de las capas ocultas.
+            chkpt_dir (str): Directorio donde se guardan los checkpoints.
+        """
         super(CriticNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'critic_torch_ppo')
@@ -105,14 +154,23 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state):
+        """
+        Pasa un estado a través de la red para obtener su valor.
+        """
         value = self.critic(state)
         return value
 
     def save_checkpoint(self):
+        """
+        Guarda los pesos del modelo.
+        """
         logging.info('Guardando modelo...')
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
+        """
+        Carga los pesos del modelo desde un archivo.
+        """
         logging.info('Cargando modelo...')
         self.load_state_dict(T.load(self.checkpoint_file))
 
@@ -137,7 +195,6 @@ class PPOAgentRefactor(Agent):
         self.episode_steps = 0  # Número de pasos en el episodio actual
 
     def remember(self, state, action, prob, value, reward, done):
-        # Normaliza el estado utilizando tu función normalize_state
         state_array = np.array(self.normalize_state(state), dtype=np.float32)
         self.memory.states.append(state_array)
         self.memory.actions.append(action)
@@ -162,9 +219,6 @@ class PPOAgentRefactor(Agent):
         self.current_episode_rewards = 0
         self.episode_steps = 0
         
-        # Reducir epsilon gradualmente para favorecer explotación
-        #self.epsilon = max(self.epsilon * 0.995, 0.05)
-        
         logging.info(f"Inicio del episodio {len(self.total_rewards) + 1}")
     
     def select_action(self, state: State):
@@ -172,9 +226,7 @@ class PPOAgentRefactor(Agent):
         state = T.tensor([normalized_state], dtype=T.float).to(self.actor.device)
 
         dist = self.actor(state)
-        #print(f"Distribución de acciones (probabilidades): {dist.probs}")
         value = self.critic(state)
-        #print(f"Valor del estado: {value}")
         action = dist.sample()
 
         probs = T.squeeze(dist.log_prob(action)).item()
@@ -217,7 +269,7 @@ class PPOAgentRefactor(Agent):
 
     def _update_models(self):
         """
-        Realiza la actualización de las redes Actor y Critic.
+        Realiza la actualización de las redes Actor y Critic, calcula las ventajas y entrena por lotes.
         """
         for _ in range(self.K_epochs):
             state_arr, action_arr, old_prob_arr, vals_arr, reward_arr, dones_arr, batches = self.memory.generate_batches()
@@ -350,11 +402,11 @@ class PPOAgentRefactor(Agent):
 
 
     def plot(self):
-            """
-            Muestra las gráficas de las métricas de entrenamiento.
-            """
-            self.plotter.plot_all()
-            #self.plotter.plot_action_probabilities(self.memory.probs)
+        """
+        Muestra las gráficas de las métricas de entrenamiento.
+        """
+        self.plotter.plot_all()
+        #self.plotter.plot_action_probabilities(self.memory.probs)
 
 
     def normalize_state(self, state: State) -> list:
@@ -391,20 +443,3 @@ class PPOAgentRefactor(Agent):
                 writer.writerow(['Episodio', 'Pasos', 'Recompensa Acumulada'])
             
             writer.writerow(episode_data)
-
-    def normalize_rewards(self, rewards):
-        """
-        Normaliza las recompensas para que tengan media 0 y desviación estándar 1.
-        
-        Parámetros:
-            rewards (list or np.array): Lista de recompensas acumuladas.
-        
-        Retorno:
-            np.array: Recompensas normalizadas.
-        """
-        rewards = np.array(rewards, dtype=np.float32)
-        mean = np.mean(rewards)
-        std = np.std(rewards) if np.std(rewards) > 0 else 1.0
-        normalized_rewards = (rewards - mean) / std
-        return normalized_rewards
-
