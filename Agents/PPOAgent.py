@@ -175,7 +175,7 @@ class CriticNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 
-class PPOAgentRefactor(Agent):
+class PPOAgent(Agent):
 
     def __init__(self, state_dim, action_dim, lr=3e-4, gamma=0.99, gae_lambda=0.95, eps_clip=0.2, batch_size=64, K_epochs=4):
         self.lr = lr
@@ -245,7 +245,6 @@ class PPOAgentRefactor(Agent):
         """
         # Calcular recompensa con `compute_reward`
         reward = self.compute_reward(state, action, next_state)
-        normalized_reward = self.normalize_rewards([reward])[0]
         self.remember(state, action, self.memory.probs[-1], self.memory.vals[-1], reward, next_state.done)
 
         # Actualizar métricas
@@ -259,7 +258,7 @@ class PPOAgentRefactor(Agent):
                 f"Pasos: {self.episode_steps}, "
                 f"Recompensa acumulada: {self.current_episode_rewards:.2f}"
             )
-            self.save_episode_data()
+            #self.save_episode_data()
 
         # Si el episodio termina, realizar la actualización de la red
         if next_state.done:

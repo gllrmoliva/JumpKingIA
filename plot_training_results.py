@@ -8,19 +8,15 @@ class MetricsPlotter:
             "episode": [],
             "total_reward": [],
             "mean_gradients": [],
-            "loss": [],
-            "entropy": []
         }
 
-    def store_metrics(self, episode, total_reward, mean_gradients, loss, entropy):
+    def store_metrics(self, episode, total_reward, mean_gradients):
         """
         Almacena las métricas de cada episodio en el diccionario de métricas.
         """
         self.metrics["episode"].append(episode)
         self.metrics["total_reward"].append(total_reward)
         self.metrics["mean_gradients"].append(mean_gradients)
-        self.metrics["loss"].append(loss)
-        self.metrics["entropy"].append(entropy)
 
     def plot_all(self):
         """
