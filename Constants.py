@@ -19,9 +19,11 @@ DEBUG_OLD_COORDINATE_SYSTEM = False # Trabaja las coordenadas de un estado de la
 '''
     Parametros de entrenamiento (Modificable)
 '''
+
 STEPS_PER_EPISODE = 512   # Número de pasos máximo a simular en un episodio
 NUMBER_OF_EPISODES = 50000 # Número de episodios a simular
 STEPS_PER_SECOND = 60      # Cuántos pasos han de realizarse en un segundo, 'que tan rápido' es la simulación
+
                            # -1 : Desbloqueado, se realiza cuantos pasos permite el hardware
 
 NO_LEVEL_MATRIX = True      # Desactiva la creación de la matriz del nivel ¡Por lo tanto un agente no puede utilizarla!

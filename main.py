@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
 	# Si se esta probando PPO = True
 	# SI se esta probando DDQN = False
-	PPO = False 
+	PPO = True 
 
 	if (PPO):
 		"""PPO"""
