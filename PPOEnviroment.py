@@ -48,33 +48,39 @@ class JumpKingEnv(gym.Env):
         if delta_altura > 0:
             self.reward += delta_altura * 10
         else:
-            self.reward += delta_altura * 14
+            self.reward += delta_altura * 10
         
         # Penalización por quedarse en el mismo lugar
         if self.next_state.x_normalized == self.state.x_normalized and self.next_state.level == self.state.level:
             self.reward -= 3
 
         if self.next_state.height_normalized == self.state.height_normalized:
-            self.reward -= 3
+            self.reward -= 4
+
+        if self.next_state.max_height_normalized == self.state.max_height_normalized:
+            self.reward -= 4
+        
+        if self.state.y_normalized == self.next_state.y_normalized:
+            self.reward -= 4
 
         if self.next_state.level > self.state.level:
             self.reward += 100
         elif self.next_state.level < self.state.level:
-            self.reward -= 80
+            self.reward -= 100
 
         done = self.next_state.done
 
         # Premio adicional por alcanzar una altura nueva
         if self.next_state.max_height_normalized > self.state.max_height_normalized:
-            self.reward += 5  
+            self.reward += 3
 
         if self.next_state.win:
             self.reward += 100  # Recompensa grande por ganar
 
         if self.next_state.done:
-            self.reward += 100 if self.next_state.max_height_normalized > self.state.max_height_normalized else -30
+            self.reward += 100 if self.next_state.max_height_normalized > self.state.max_height_normalized else -100
 
-        self.reward += self.state.max_height_normalized
+        self.reward += self.state.height_normalized
 
         observation = self._state_to_observation(self.next_state)
 
